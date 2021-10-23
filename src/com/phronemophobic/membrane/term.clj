@@ -16,30 +16,6 @@
 (defn blank-cell? [cell]
   (= cell blank-cell))
 
-(def term-color-names [;; :white
-                       :black
-                       :red
-                       :green
-                       :yellow
-                       :blue
-                       :magenta
-                       :cyan
-                       :bright-black
-                       :bright-red
-                       :bright-green
-                       :bright-yellow
-                       :bright-blue
-                       :bright-magenta
-                       :bright-cyan
-                       :bright-white])
-(defn num->term-color-name [num]
-  (let [color-name (nth term-color-names num
-                   :not-found)]
-    (if (= :not-found color-name)
-      (do (prn "color not found: " num)
-          :red)
-      color-name)))
-
 (def term-color-name->color
   {:white           [1     1     1   ]
    :black           [0     0     0   ]
@@ -58,11 +34,54 @@
    :bright-cyan     [0.38  0.84  0.84]
    :bright-white    [0.95  0.95  0.95]})
 
+
+(defn num->term-color [num]
+  (case num
+    0 (term-color-name->color :black)
+    1 (term-color-name->color :red)
+    2 (term-color-name->color :green)
+    3 (term-color-name->color :yellow)
+    4 (term-color-name->color :blue)
+    5 (term-color-name->color :magenta)
+    6 (term-color-name->color :cyan)
+    7 (term-color-name->color :white)
+
+    8  (term-color-name->color :bright-black)
+    9  (term-color-name->color :bright-red)
+    10 (term-color-name->color :bright-green)
+    11 (term-color-name->color :bright-yellow)
+    12 (term-color-name->color :bright-blue)
+    13 (term-color-name->color :bright-magenta)
+    14 (term-color-name->color :bright-cyan)
+    15 (term-color-name->color :bright-white)
+
+    ;; else
+    (cond
+
+      (and (>= num 16)
+           (<= num 231))
+      (let [num (- num 16)
+            v [0x00, 0x5f, 0x87, 0xaf, 0xd7, 0xff]
+            r (nth v (int (mod (/ num 36.0) 6)))
+            g (nth v (int (mod (/ num 6.0) 6)))
+            b (nth v (int (mod num 6.0)))]
+        [(/ r 255.0)
+         (/ g 255.0)
+         (/ b 255.0)])
+
+      (and (>= num 232)
+           (<= num 255))
+      (let [gray (/ (+ 8 (* 10 (- num 232))) 255.0)]
+        [gray gray gray])
+
+      :else
+      (do (prn "color not found: " num)
+          :red))
+    ))
+
 (defn wrap-fg-color [c elem]
   (if c
-    (ui/with-color (-> c
-                       num->term-color-name
-                       term-color-name->color)
+    (ui/with-color (num->term-color c)
       elem)
     elem))
 
