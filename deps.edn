@@ -1,14 +1,21 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.10.3"}
-        com.phronemophobic/membrane {;; :mvn/version "0.9.29.0-beta"
-                                     :local/root "../membrane2"
+        com.phronemophobic/membrane {:mvn/version "0.9.31.0-beta"
+                                     ;; :local/root "../membrane2"
                                      }
         com.phronemophobic.membrane/skialib-macosx-aarch64
-        {;;:mvn/version "0.9.30.0-beta"
-         :local/root "../membrane2/csource/macos-aarch64"
+        {:mvn/version "0.9.31.0-beta"
+         ;;:local/root "../membrane2/csource/macos-aarch64"
          }
 
-        asciinema/vt {:local/root "../vt"}
+        com.phronemophobic.membrane/skialib-macosx-x86-64
+        {:mvn/version "0.9.31.0-beta"}
+
+        com.phronemophobic.membrane/skialib-linux-x86-64
+        {:mvn/version "0.9.31.0-beta"}
+
+        asciinema/vt {:git/url "https://github.com/phronmophobic/vt"
+                      :git/sha "15b5399d6f5e9e189944cf47726dca4842dd4273"}
 
         org.jetbrains.pty4j/pty4j {:mvn/version "0.11.4"}
 
