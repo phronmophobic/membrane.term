@@ -1,10 +1,10 @@
 # membrane.term
 
-A simple terminal in clojure.
+A simple terminal emulator in clojure.
 
 ## Rationale
 
-I thought it would be fun. There's not much code. Most of the work is done by [asciinema/vt](https://github.com/asciinema/vt). `membrane.term` is just small UI on top. If you needed to programmatically control, inspect, drive, or manipulate a terminal, then either `asciinema/vt` or `membrane.term` might be a good fit. If you want a fast, efficient terminal for day to day use, then use something else.
+I thought it would be fun. There's not much code. Most of the work is done by [asciinema/vt](https://github.com/asciinema/vt). `membrane.term` is just small UI on top. If you needed to programmatically control, inspect, drive, or manipulate a terminal, then either `asciinema/vt` or `membrane.term` might be a good fit. It might also be a good place to start if you wanted to learn more about how terminal emulators work.
 
 ## Dependency
 
