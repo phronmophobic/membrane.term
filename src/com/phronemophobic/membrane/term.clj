@@ -6,16 +6,11 @@
   (:import com.pty4j.PtyProcess))
 
 
-;; (def pty-state (atom {:vt (vt/make-vt 90 60)}))
-
 (defn start-pty []
   (let [cmd (into-array String ["/bin/sh" "-l"])
         ;;env (into-array String ["TERM=eterm-color"])
         pty (PtyProcess/exec cmd (System/getenv))]
     pty))
-
-
-
 
 (def blank-cell [32 {}])
 (defn blank-cell? [cell]
@@ -138,39 +133,9 @@
   (.close (.getInputStream (:pty @pty-state)))
   ,)
 
-
-
-
-
-;; // The command to run in a PTY...
-;; String[] cmd = { "/bin/sh", "-l" };
-;; // The initial environment to pass to the PTY child process...
-;; String[] env = { "TERM=xterm" };
-;; PtyProcess pty = PtyProcess.exec(cmd, env);
-
-;; OutputStream os = pty.getOutputStream();
-;; InputStream is = pty.getInputStream();
-
-;; // ... work with the streams ...
-
-;; // wait until the PTY child process terminates...
-;; int result = pty.waitFor();
-
 (defn writec-bytes [out bytes]
   (doseq [b bytes]
     (.write out (int b))))
-
-(def script
-  "export HOME=/Users/adrian
-cd
-cd workspace/deep-diff2
-clojure
-(require '[lambdaisland.deep-diff2 :as ddiff])
-
-(ddiff/pretty-print (ddiff/diff {:a 1 :b 2} {:a 1 :c 3}))
-"
-
-)
 
 (defn send-input [pty s]
   (let [out (.getOutputStream pty)]
