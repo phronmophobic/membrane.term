@@ -141,6 +141,33 @@
   (let [out (.getOutputStream pty)]
     (writec-bytes out (.getBytes s))))
 
+(def meta-shift-map
+  {
+   \` \~
+   \1 \!
+   \2 \@
+   \3 \#
+   \4 \$
+   \5 \%
+   \6 \^
+   \7 \&
+   \8 \*
+   \9 \(
+   \0 \)
+   \- \_
+   \= \+
+
+   \[ \{
+   \] \}
+   \\ \|
+
+   \; \:
+   \' \"
+
+   \, \<
+   \. \>
+   \/ \?})
+
 (defn term-events [pty view]
   (let [out (.getOutputStream pty)]
     (ui/on 
@@ -179,16 +206,34 @@
 
          (when (not (zero? (bit-and skia/GLFW_MOD_CONTROL mods)))
            (when (< key 128)
-             (let [b (inc (- key (int \A) ))]
-               (writec-bytes out [b]))))
+             (case (char key)
+               (\A \B \C \D \E \F \G \H \I \J \K \L \M \N \O \P \Q \R \S \T \U \V \W \X \Y \Z)
+               (let [b (inc (- key (int \A) ))]
+                 (writec-bytes out [b]))
+
+               \-
+               (let [b (inc (- (int \_) (int \A)))]
+                 (writec-bytes out [b]))
+
+               nil)))
 
          (when (not (zero? (bit-and skia/GLFW_MOD_ALT mods)))
            (when (< key 128)
-             (let [key (if (not (zero? (bit-and skia/GLFW_MOD_SHIFT mods)))
-                         (- key (- (int \A) (int \a)))
-                         key)]
-               (writec-bytes out [0x1b key]))))
-         )
+             (case (char key)
+
+               (\A \B \C \D \E \F \G \H \I \J \K \L \M \N \O \P \Q \R \S \T \U \V \W \X \Y \Z)
+               (let [key (if (zero? (bit-and skia/GLFW_MOD_SHIFT mods))
+                           (- key (- (int \A) (int \a)))
+                           key)]
+                 (writec-bytes out [0x1b key]))
+
+               ;; else
+               (let [key (if (not (zero? (bit-and skia/GLFW_MOD_SHIFT mods)))
+                           (when-let [c (get meta-shift-map (char key))]
+                             (int c))
+                           key)]
+                 (when key
+                   (writec-bytes out [0x1b key])))))))
        nil
        )
      :key-press
