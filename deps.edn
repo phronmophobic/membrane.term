@@ -1,0 +1,34 @@
+{:paths ["src" "resources"]
+ :deps {org.clojure/clojure {:mvn/version "1.10.3"}
+        com.phronemophobic/membrane {;; :mvn/version "0.9.29.0-beta"
+                                     :local/root "../membrane2"
+                                     }
+        com.phronemophobic.membrane/skialib-macosx-aarch64
+        {;;:mvn/version "0.9.30.0-beta"
+         :local/root "../membrane2/csource/macos-aarch64"
+         }
+
+        asciinema/vt {:local/root "../vt"}
+
+        org.jetbrains.pty4j/pty4j {:mvn/version "0.11.4"}
+
+        }
+ :mvn/repos
+ {"jetbrains-intellij-dependencies" {:url "https://packages.jetbrains.team/maven/p/ij/intellij-dependencies"}}
+ :aliases
+ {:test {:extra-paths ["test"]
+         :extra-deps {org.clojure/test.check {:mvn/version "1.1.0"}}}
+  :runner
+  {:extra-deps {io.github.cognitect-labs/test-runner
+                {:git/url "https://github.com/cognitect-labs/test-runner"
+                 :sha "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}}
+   :exec-fn cognitect.test-runner.api/test}
+  :jar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.0.216"}}
+        :exec-fn hf.depstar/jar
+        :exec-args {:jar "term.jar" :sync-pom true}}
+  :install {:replace-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
+            :exec-fn deps-deploy.deps-deploy/deploy
+            :exec-args {:installer :local :artifact "term.jar"}}
+  :deploy {:replace-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
+           :exec-fn deps-deploy.deps-deploy/deploy
+           :exec-args {:installer :remote :artifact "term.jar"}}}}
