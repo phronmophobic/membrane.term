@@ -9,7 +9,7 @@ I thought it would be fun. There's not much code. Most of the work is done by [a
 ## Dependency
 
 ```
-{:git/sha "fa653187ba42d77154f7bd52c6f47f6dd483f266"
+{:git/sha "65238c3bf61ed3392f00f41df3329d67eb5b92ec"
  :git/url "https://github.com/phronmophobic/membrane.term"}
 ```
 
