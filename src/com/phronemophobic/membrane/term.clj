@@ -282,10 +282,13 @@
    (let [term-state (atom {:vt (vt/make-vt width height)})]
      (swap! term-state assoc :pty (start-pty))
      (future
-       (while true
-         (let [input (.read (.getInputStream (:pty @term-state)))]
-           ;; (prn "input: " input)
-           (swap! term-state update :vt vt/feed-one input))))
+       (try
+         (while true
+           (let [input (.read (.getInputStream (:pty @term-state)))]
+             ;; (prn "input: " input)
+             (swap! term-state update :vt vt/feed-one input)))
+         (catch Exception e
+           (prn e))))
 
      (skia/run-sync
        (fn []
@@ -309,10 +312,13 @@
    (let [term-state (atom {:vt (vt/make-vt width height)})]
      (swap! term-state assoc :pty (start-pty))
      (future
-       (while true
-         (let [input (.read (.getInputStream (:pty @term-state)))]
-           ;; (prn "input: " input)
-           (swap! term-state update :vt vt/feed-one input))))
+       (try
+         (while true
+           (let [input (.read (.getInputStream (:pty @term-state)))]
+             ;; (prn "input: " input)
+             (swap! term-state update :vt vt/feed-one input)))
+         (catch Exception e
+           (prn e))))
 
      (doseq [line (clojure.string/split-lines (slurp path))]
        (send-input (:pty @term-state) line)
