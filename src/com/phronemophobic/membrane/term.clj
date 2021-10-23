@@ -223,25 +223,25 @@
            ;; (prn "input: " input)
            (swap! term-state update :vt vt/feed-one input))))
 
-     (skia/run ;; -sync
+     (skia/run-sync
        (fn []
          (let [{:keys [pty vt]} @term-state]
            (term-events pty
                         (term-view (:vt @term-state)))))
        {:window-start-width (* width cell-width)
-        :window-start-height (* height cell-height)})
+        :window-start-height (+ 8 (* height cell-height))})
      
-     #_(let [pty (:pty @term-state)]
+     (let [pty (:pty @term-state)]
        (.close (.getInputStream pty))
-       (.close (.getOutputStream pty)))))
-
-  )
-
+       (.close (.getOutputStream pty))))))
 
 (defn run-script
-  ([{:keys [path width height]
+  ([{:keys [path width height out line-delay final-delay]
      :or {width 90
-          height 30}}]
+          height 30
+          line-delay 1e3
+          final-delay 10e3
+          out "terminal.png"}}]
    (let [term-state (atom {:vt (vt/make-vt width height)})]
      (swap! term-state assoc :pty (start-pty))
      (future
@@ -256,9 +256,10 @@
        (Thread/sleep 1e3))
 
      (Thread/sleep 10e3)
-     (skia/draw-to-image! "terminal.png"
+     (skia/draw-to-image! out
                           (ui/padding 5
                                       (term-view (:vt @term-state))))
+     (println (str "Wrote to " out ".") )
      
      (let [pty (:pty @term-state)]
        (.close (.getInputStream pty))
