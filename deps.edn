@@ -14,8 +14,10 @@
         com.phronemophobic.membrane/skialib-linux-x86-64
         {:mvn/version "0.9.31.0-beta"}
 
-        asciinema/vt {:git/url "https://github.com/phronmophobic/vt"
-                      :git/sha "15b5399d6f5e9e189944cf47726dca4842dd4273"}
+        asciinema/vt
+        #_{:local/root "../vt"}
+        {:git/url "https://github.com/phronmophobic/vt"
+         :git/sha "cc92e624bfc7e08d8bfdbd761f21d1ea43572edf"}
 
         org.jetbrains.pty4j/pty4j {:mvn/version "0.11.4"}
 
