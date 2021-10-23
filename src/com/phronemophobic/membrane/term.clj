@@ -253,9 +253,9 @@
      (doseq [line (clojure.string/split-lines (slurp path))]
        (send-input (:pty @term-state) line)
        (send-input (:pty @term-state) "\n")
-       (Thread/sleep 1e3))
+       (Thread/sleep line-delay))
 
-     (Thread/sleep 10e3)
+     (Thread/sleep final-delay)
      (skia/draw-to-image! out
                           (ui/padding 5
                                       (term-view (:vt @term-state))))
