@@ -17,11 +17,11 @@ I thought it would be fun. There's not much code. Most of the work is done by [a
 
 Open a terminal window.
 
-    $ clojure -X com.phronemophobic.membrane.term/run-term :width 90 :height 30
+    clojure -X com.phronemophobic.membrane.term/run-term :width 90 :height 30
 
 Run a script in a headless terminal and write an image to terminal.png.
 
-    $ clojure -X com.phronemophobic.membrane.term/run-script :path '"script.sh"'
+    clojure -X com.phronemophobic.membrane.term/run-script :path '"script.sh"'
     
 The script is passed to the terminal character by character. The script also accepts the following optional arguments:
 
@@ -33,7 +33,7 @@ The script is passed to the terminal character by character. The script also acc
 
 Example:
 
-    $ clojure -X com.phronemophobic.membrane.term/run-script :path '"script.sh"' :width 120 :height 30 :final-delay 30e3 :line-delay 0 :out '"foo.jpg"'
+    clojure -X com.phronemophobic.membrane.term/run-script :path '"script.sh"' :width 120 :height 30 :final-delay 30e3 :line-delay 0 :out '"foo.jpg"'
 
 ## License
 
