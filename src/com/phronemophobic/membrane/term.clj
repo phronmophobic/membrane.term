@@ -287,10 +287,11 @@
      (swap! term-state assoc :pty (start-pty))
      (future
        (try
-         (while true
+         (loop []
            (let [input (.read (.getInputStream (:pty @term-state)))]
-             ;; (prn "input: " input)
-             (swap! term-state update :vt vt/feed-one input)))
+             (when (not= -1 input)
+               (swap! term-state update :vt vt/feed-one input)
+               (recur))))
          (catch Exception e
            (prn e))))
 
