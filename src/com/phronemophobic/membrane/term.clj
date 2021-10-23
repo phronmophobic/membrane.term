@@ -230,6 +230,10 @@
                (let [b (inc (- key (int \A) ))]
                  (writec-bytes out [b]))
 
+               \space
+               (let [b (inc (- (int (char \@)) (int \A) ))]
+                 (writec-bytes out [b]))
+
                \-
                (let [b (inc (- (int \_) (int \A)))]
                  (writec-bytes out [b]))
