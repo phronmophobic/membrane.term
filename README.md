@@ -4,7 +4,12 @@ A simple terminal emulator in clojure.
 
 ## Rationale
 
-I thought it would be fun. There's not much code. Most of the work is done by [asciinema/vt](https://github.com/asciinema/vt). `membrane.term` is just small UI on top. If you needed to programmatically control, inspect, drive, or manipulate a terminal, then either `asciinema/vt` or `membrane.term` might be a good fit. It might also be a good place to start if you wanted to learn more about how terminal emulators work.
+I thought it would be fun. There's not much code. All of the ANSI parsing work is done by [asciinema/vt](https://github.com/asciinema/vt). `membrane.term` is just small UI on top.
+
+Some reasons to use membrane.term:
+- If you needed to programmatically control, inspect, drive, or manipulate a terminal
+- If you wanted to learn more about how terminal emulators work.
+- If you'd like to embed a terminal somewhere. There's not really a guide for embedding, but if you file an issue, I can provide some tips.
 
 ## Dependency
 
