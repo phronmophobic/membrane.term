@@ -3,13 +3,14 @@
             [asciinema.vt.screen :as screen]
             [membrane.ui :as ui]
             [membrane.skia :as skia])
-  (:import com.pty4j.PtyProcess))
+  (:import [com.pty4j PtyProcess WinSize]))
 
 
 (defn start-pty []
-  (let [cmd (into-array String ["/bin/sh" "-l"])
-        ;;env (into-array String ["TERM=eterm-color"])
-        pty (PtyProcess/exec cmd (System/getenv))]
+  (let [cmd (into-array String ["/bin/bash" "-l"])
+        pty (PtyProcess/exec cmd
+                             (merge (into {} (System/getenv))
+                                    {"TERM" "xterm-256color"}))]
     pty))
 
 (def blank-cell [32 {}])
@@ -276,6 +277,20 @@
        nil)
      view)))
 
+(defn run-pty-process [width height term-state]
+  (let [pty (doto (start-pty)
+              (.setWinSize (WinSize. width height)))]
+    (future
+      (try
+        (loop []
+          (let [input (.read (.getInputStream pty))]
+            (when (not= -1 input)
+              (swap! term-state update :vt vt/feed-one input)
+              (recur))))
+        (catch Exception e
+          (prn e))))
+    pty))
+
 (defn run-term
   ([]
    (run-term {}))
@@ -284,17 +299,8 @@
      :or {width 90
           height 30}}]
    (let [term-state (atom {:vt (vt/make-vt width height)})]
-     (swap! term-state assoc :pty (start-pty))
-     (future
-       (try
-         (loop []
-           (let [input (.read (.getInputStream (:pty @term-state)))]
-             (when (not= -1 input)
-               (swap! term-state update :vt vt/feed-one input)
-               (recur))))
-         (catch Exception e
-           (prn e))))
-
+     (swap! term-state assoc
+            :pty (run-pty-process width height term-state))
      (skia/run-sync
        (fn []
          (let [{:keys [pty vt]} @term-state]
@@ -315,16 +321,8 @@
           final-delay 10e3
           out "terminal.png"}}]
    (let [term-state (atom {:vt (vt/make-vt width height)})]
-     (swap! term-state assoc :pty (start-pty))
-     (future
-       (try
-         (while true
-           (let [input (.read (.getInputStream (:pty @term-state)))]
-             ;; (prn "input: " input)
-             (swap! term-state update :vt vt/feed-one input)))
-         (catch Exception e
-           (prn e))))
-
+     (swap! term-state assoc
+            :pty (run-pty-process width height term-state))
      (doseq [line (clojure.string/split-lines (slurp path))]
        (send-input (:pty @term-state) line)
        (send-input (:pty @term-state) "\n")
