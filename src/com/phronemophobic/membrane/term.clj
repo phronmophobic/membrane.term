@@ -8,9 +8,9 @@
 
 (defn start-pty []
   (let [cmd (into-array String ["/bin/bash" "-l"])
-        pty (PtyProcess/exec cmd
-                             (merge (into {} (System/getenv))
-                                    {"TERM" "xterm-256color"}))]
+        pty (PtyProcess/exec ^"[Ljava.lang.String;" cmd
+                             ^java.util.Map (merge (into {} (System/getenv))
+                                                   {"TERM" "xterm-256color"}))]
     pty))
 
 (def blank-cell [32 {}])
@@ -36,7 +36,7 @@
    :bright-white    [0.95  0.95  0.95]})
 
 
-(defn num->term-color [num]
+(defn num->term-color [^long num]
   (case num
     0 (term-color-name->color :black)
     1 (term-color-name->color :red)
@@ -154,11 +154,11 @@
   ,)
 
 (defn writec-bytes [out bytes]
-  (.write out (byte-array bytes)))
+  (.write ^java.io.OutputStream out (byte-array bytes)))
 
 (defn send-input [pty s]
-  (let [out (.getOutputStream pty)]
-    (writec-bytes out (.getBytes s))))
+  (let [out (.getOutputStream ^PtyProcess pty)]
+    (writec-bytes out (.getBytes ^String s))))
 
 (def meta-shift-map
   {
@@ -188,13 +188,13 @@
    \/ \?})
 
 (defn term-events [pty view]
-  (let [out (.getOutputStream pty)]
+  (let [out (.getOutputStream ^PtyProcess pty)]
     (ui/on 
      :key-event
      (fn [key scancode action mods]
 
        (when (#{:press :repeat} action)
-         (case key
+         (case (int key)
            ;; backspace
            259 (writec-bytes out [0x7f])
 
@@ -268,7 +268,7 @@
                         ;; default
                         nil)
                       s)]
-         (let [bts (.getBytes s)]
+         (let [bts (.getBytes ^String s)]
            (when (pos? (first bts))
              (writec-bytes out bts)
              )))
@@ -277,7 +277,8 @@
      view)))
 
 (defn run-pty-process [width height term-state]
-  (let [pty (doto (start-pty)
+  (let [^PtyProcess
+        pty (doto ^PtyProcess (start-pty)
               (.setWinSize (WinSize. width height)))]
     (future
       (try
@@ -308,7 +309,7 @@
        {:window-start-width (* width cell-width)
         :window-start-height (+ 8 (* height cell-height))})
      
-     (let [pty (:pty @term-state)]
+     (let [^PtyProcess pty (:pty @term-state)]
        (.close (.getInputStream pty))
        (.close (.getOutputStream pty))))))
 
@@ -333,7 +334,7 @@
                                       (term-view (:vt @term-state))))
      (println (str "Wrote to " out ".") )
      
-     (let [pty (:pty @term-state)]
+     (let [^PtyProcess pty (:pty @term-state)]
        (.close (.getInputStream pty))
        (.close (.getOutputStream pty))))
    )
