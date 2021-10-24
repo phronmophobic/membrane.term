@@ -26,6 +26,8 @@ Open a terminal window.
 
     clojure -X com.phronemophobic.membrane.term/run-term :width 90 :height 30
     
+![run-term-screenshot](terminal.gif?raw=true)
+
 ### Run a headless terminal and take a screenshot
 
 Run a script in a headless terminal and write an image to terminal.png.
