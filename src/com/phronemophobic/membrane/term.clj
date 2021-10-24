@@ -154,8 +154,7 @@
   ,)
 
 (defn writec-bytes [out bytes]
-  (doseq [b bytes]
-    (.write out (int b))))
+  (.write out (byte-array bytes)))
 
 (defn send-input [pty s]
   (let [out (.getOutputStream pty)]
