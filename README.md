@@ -25,11 +25,11 @@ Run a script in a headless terminal and write an image to terminal.png.
     
 The script is passed to the terminal character by character. The script also accepts the following optional arguments:
 
-`width`: number of columns for the terminal. default 90
-`height`: number of rows for the terminal. default 30
-`out`: filename of the image to write to. default "terminal.png"
-`line-delay`: If you type a command like `lein repl`, the underlying program might not be ready to accept input immediately. You can specify a delay in ms to wait after each line is sent to the terminal. default 1000.
-`final-delay`: For the same reasons as `line-delay`, there is a final delay before writing the view of the terminal. default 10000.
+`width`: number of columns for the terminal. default 90  
+`height`: number of rows for the terminal. default 30  
+`out`: filename of the image to write to. default "terminal.png"  
+`line-delay`: If you type a command like `lein repl`, the underlying program might not be ready to accept input immediately. You can specify a delay in ms to wait after each line is sent to the terminal. default 1000.  
+`final-delay`: For the same reasons as `line-delay`, there is a final delay before writing the view of the terminal. default 10000.  
 
 Example:
 
