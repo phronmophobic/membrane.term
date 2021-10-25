@@ -108,7 +108,13 @@
           (fn [[i [c attrs]]]
             (let [foreground (wrap-color (:fg attrs)
                                          (ui/label (Character/toString (char c))
-                                                   term-font))
+                                                   (assoc term-font
+                                                          :weight (if (:bold attrs)
+                                                                    :bold
+                                                                    :normal)
+                                                          :slant (if (:italic attrs)
+                                                                   :italic
+                                                                   :upright))))
                   background (when-let [bg (:bg attrs)]
                                (ui/translate 0 bg-offset
                                              (wrap-color bg
