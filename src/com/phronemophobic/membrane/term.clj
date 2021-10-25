@@ -80,13 +80,11 @@
           :red))
     ))
 
-(defn wrap-fg-color [c elem]
+(defn wrap-color [c elem]
   (if c
     (ui/with-color (num->term-color c)
       elem)
     elem))
-
-
 
 (def term-font
   (cond
@@ -108,14 +106,14 @@
                    (blank-cell? cell)))
          (map
           (fn [[i [c attrs]]]
-            (let [foreground (wrap-fg-color (:fg attrs)
-                                            (ui/label (Character/toString (char c))
-                                                      term-font))
+            (let [foreground (wrap-color (:fg attrs)
+                                         (ui/label (Character/toString (char c))
+                                                   term-font))
                   background (when-let [bg (:bg attrs)]
                                (ui/translate 0 bg-offset
-                                             (wrap-fg-color bg
-                                                            (ui/rectangle (inc cell-width)
-                                                                          (inc cell-height)))))]
+                                             (wrap-color bg
+                                                         (ui/rectangle (inc cell-width)
+                                                                       (inc cell-height)))))]
               
               (ui/translate
                (* cell-width i) 0
