@@ -14,7 +14,7 @@ Some reasons to use membrane.term:
 ## Dependency
 
 ```
-{:git/sha "5090b8a677ce971f94f8edbf8ed197d517e16c73"
+{:git/sha "d09d563ee9c1677ee9a2ecd186f84bb6214e94f7"
  :git/url "https://github.com/phronmophobic/membrane.term"}
 ```
 
