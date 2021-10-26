@@ -94,7 +94,7 @@
     :else (ui/font "monospace" 12)))
 
 (def font-metrics (skia/skia-font-metrics term-font))
-(def cell-width (#'skia/skia-advance-x term-font " "))
+(def cell-width (skia/skia-advance-x term-font " "))
 (def cell-height (skia/skia-line-height term-font))
 (def bg-offset (:Descent font-metrics))
 
