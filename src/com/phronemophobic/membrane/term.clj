@@ -135,21 +135,23 @@
                    0.5725490196078431
                    0.4])
 (defn term-view [vt]
-  (ui/no-events
-   (into [(let [{:keys [x y visible]} (-> vt :screen :cursor)]
-            (when visible
-              (ui/translate (* x cell-width)
-                            (+ (* y cell-height)
-                               bg-offset)
-                            (ui/with-color cursor-color
-                              (ui/rectangle (inc cell-width) (inc cell-height))))))]
-         (comp (map-indexed
-                (fn [i line]
-                  (ui/translate
-                   0 (* i cell-height)
-                   (ui/->Cached
-                    (term-line-memo line))))))
-         (-> vt :screen :lines))))
+  (let [cursor (let [{:keys [x y visible]} (-> vt :screen :cursor)]
+                 (when visible
+                   (ui/translate (* x cell-width)
+                                 (+ (* y cell-height)
+                                    bg-offset)
+                                 (ui/with-color cursor-color
+                                   (ui/rectangle (inc cell-width) (inc cell-height))))))]
+    (ui/no-events
+     (conj (into []
+                 (comp (map-indexed
+                        (fn [i line]
+                          (ui/translate
+                           0 (* i cell-height)
+                           (ui/->Cached
+                            (term-line-memo line))))))
+                 (-> vt :screen :lines))
+           cursor))))
 
 (comment
   
