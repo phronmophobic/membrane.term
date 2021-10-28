@@ -8,7 +8,7 @@
 
 
 (defn start-pty []
-  (let [cmd (into-array String ["/bin/bash" "-l"])
+  (let [cmd (into-array String ["/usr/bin/env" "emacs" "-nw"])
         pty (PtyProcess/exec ^"[Ljava.lang.String;" cmd
                              ^java.util.Map (merge (into {} (System/getenv))
                                                    {"TERM" "xterm-256color"}))]
