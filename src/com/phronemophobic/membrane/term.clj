@@ -315,6 +315,13 @@
     (color-scheme/load-scheme source)
     default-color-scheme))
 
+(defn on-reshape [window window-handle width height]
+  (let [[xscale yscale] (#'skia/get-window-content-scale-size window-handle)
+        px-width (/ width xscale)
+        px-height (/ height yscale)]
+    (println "new size is: " px-width px-height))
+  (#'skia/-reshape window window-handle width height))
+
 (defn run-term
   ([]
    (run-term {}))
@@ -332,8 +339,8 @@
           (term-events pty
                        (term-view color-scheme vt))))
       {:window-start-width (* width cell-width)
-       :window-start-height (+ window-padding-height (* height cell-height))})
-
+       :window-start-height (+ window-padding-height (* height cell-height))
+       :handlers {:reshape on-reshape}})
      (let [^PtyProcess pty (:pty @term-state)]
        (.close (.getInputStream pty))
        (.close (.getOutputStream pty))))))
