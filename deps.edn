@@ -2,6 +2,7 @@
  :deps {org.clojure/clojure {:mvn/version "1.10.3"}
         org.clojure/data.xml {:mvn/version "0.2.0-alpha6"}
         org.clojure/data.zip {:mvn/version "1.0.0"}
+        dev.nubank/docopt {:mvn/version "0.6.1-fix7"}
         com.phronemophobic/membrane {:mvn/version "0.9.31.0-beta"
                                      ;; :local/root "../membrane2"
                                      }
@@ -21,13 +22,18 @@
         {:git/url "https://github.com/phronmophobic/vt"
          :git/sha "cc92e624bfc7e08d8bfdbd761f21d1ea43572edf"}
 
-        org.jetbrains.pty4j/pty4j {:mvn/version "0.11.4"}
+        org.jetbrains.pty4j/pty4j {:mvn/version "0.11.4"}}
 
-        }
  :mvn/repos
  {"jetbrains-intellij-dependencies" {:url "https://packages.jetbrains.team/maven/p/ij/intellij-dependencies"}}
  :aliases
- {:test {:extra-paths ["test"]
+
+ {:membrane.term ;; to simulate a user installation
+  {:extra-deps {org.slf4j/log4j-over-slf4j {:mvn/version "1.7.32"}
+                org.slf4j/slf4j-nop {:mvn/version "1.7.32"}}
+   :main-opts ["-m" "com.phronemophobic.membrane.term.main"]}
+
+  :test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.0"}}}
   :runner
   {:extra-deps {io.github.cognitect-labs/test-runner
