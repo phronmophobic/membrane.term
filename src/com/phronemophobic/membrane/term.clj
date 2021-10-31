@@ -346,8 +346,9 @@
   (run-term {:color-scheme "https://raw.githubusercontent.com/mbadolato/iTerm2-Color-Schemes/master/schemes/Belafonte%20Day.itermcolors"})
   )
 
-(defn run-script
-  ([{:keys [path width height out line-delay final-delay color-scheme]
+(defn screenshot
+  ([{:keys [play width height out line-delay final-delay color-scheme]
+     :as _opts
      :or {width 90
           height 30
           line-delay 1e3
@@ -357,7 +358,7 @@
          color-scheme (load-color-scheme color-scheme)]
      (swap! term-state assoc
             :pty (run-pty-process width height term-state))
-     (doseq [line (string/split-lines (slurp path))]
+     (doseq [line (string/split-lines (slurp play))]
        (send-input (:pty @term-state) line)
        (send-input (:pty @term-state) "\n")
        (Thread/sleep line-delay))
@@ -366,7 +367,7 @@
      (skia/draw-to-image! out
                           (ui/fill-bordered (:background color-scheme) 5
                                             (term-view color-scheme (:vt @term-state))))
-     (println (str "Wrote to " out "."))
+     (println (str "Wrote screenshot to " out "."))
 
      (let [^PtyProcess pty (:pty @term-state)]
        (.close (.getInputStream pty))
