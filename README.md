@@ -22,7 +22,7 @@ To invoke via `clj -M:membrane.term` add the following alias to your `deps.edn`:
  {:membrane.term
   {:replace-deps
    {phronmophobic/membrane.term {:git/url "https://github.com/phronmophobic/membrane.term.git"
-                                 :git/sha "<lastest-sha>"}
+                                 :git/sha "7b973adc4910729042736d8a84e5fce4f4f43722"}
     ;; the next 2 optional deps appease pty4j which does some logging
     ;; change nop to simple if you'd actually like to see the log lines
     org.slf4j/log4j-over-slf4j {:mvn/version "1.7.32"}
@@ -32,8 +32,6 @@ To invoke via `clj -M:membrane.term` add the following alias to your `deps.edn`:
  ;; pty4j is currently only available from the jetbrains maven repo
  {"jetbrains-intellij-dependencies" {:url "https://packages.jetbrains.team/maven/p/ij/intellij-dependencies"}}}
 ```
-
-Replace `<latest-sha>` with current git sha for membrane.term repo.
 
 ## Command Line Usage
 
