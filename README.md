@@ -38,13 +38,13 @@ Replace `<latest-sha>` with current git sha for membrane.term repo.
 ## Command Line Usage
 
 For usage help run:
-```
+```bash
 clj -M:membrane.term --help
 ```
 
 ### Run an interactive GUI terminal
 
-```
+```bash
 clj -M:membrane.term run-term
 ```
 
@@ -112,7 +112,7 @@ clojure
 ```
 Let's increase the line delay to give the Clojure REPL a chance to start up before feeding it input.
 We'll also reduce the final delay, we just don't need 10 seconds for this one:
-```
+```bash
 clj -M:membrane.term screenshot --play play-deep-diff.sh \
   --width 80 --height 9 \
   --final-delay 1000 --line-delay 3000 \
@@ -129,14 +129,14 @@ Review what you might like [from their screenshots](https://github.com/mbadolato
 
 Use the `--color-scheme` option to specify an `.itermcolors` file, either from a copy you have downloaded:
 
-```
+```bash
 clj -M:membrane.term run-term --width 90 --height 30 \
   ---color-scheme "Builtin Solarized Dark.itermcolors"
 ```
 
 ...or directly from the raw GitHub URL:
 
-```
+```bash
 clj -M:membrane.term screenshot --play play-msgcat.sh --height 14 \
   --color-scheme "https://raw.githubusercontent.com/mbadolato/iTerm2-Color-Schemes/master/schemes/Builtin%20Solarized%20Dark.itermcolors"
 ```
