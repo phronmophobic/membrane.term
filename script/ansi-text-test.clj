@@ -99,6 +99,7 @@
                 :bg-bright-cyan 106
                 :bg-bright-white 107})
 
+
 (def keys-visited (atom #{}))
 
 (def isgr-codes (cset/map-invert sgr-codes))
@@ -112,7 +113,6 @@
   (let [k (or (get isgr-codes code) (throw (ex-info (format "oops code %s not defined" code) {})))]
     (swap! keys-visited conj k)
     k))
-
 
 (defn- ansi [code & params]
   (str "\u001b[" (string/join ";" (concat [code] params)) "m"))
@@ -137,11 +137,15 @@
            (str (sample-text k) (ansi-by-key :clear))))
        codes))
 
+(defn sample-text-for-keys [ks]
+  (sample-text-for-codes
+    (map get-sgr-code ks)))
+
 (defn- stripped [s]
   (string/replace s #"\u001b\[.*?m" ""))
 
 (defn print-samples [title samples]
-  (println (str "\n" title))
+  (print (format "\n> %s\n  " title))
   (let [max-len (->> samples
                      (map stripped)
                      (map count)
@@ -157,23 +161,83 @@
                              (apply str (repeat pad " "))
                              "]"))))
          (partition num-cols num-cols nil)
-         (interpose ["\n"])
+         (interpose ["\n  "])
          (apply concat)
          (run! print)))
   (println))
 
-(print-samples "-[Current strong candidates for Support]-"
-               (sample-text-for-codes
-                (concat
-                  (range 0 6)
-                  [7 9]
-                  (range 21 25)
-                  [27 29]
-                  (range 30 50)
-                  (range 90 98)
-                  (range 100 108))))
+(print-samples "membrane.term - supported"
+               (sample-text-for-keys
+                [:clear
+                 :bold
+                 :italic
+                 :normal-intensity
+                 :not-italic
+                 :fg-black
+                 :fg-red
+                 :fg-green
+                 :fg-yellow
+                 :fg-blue
+                 :fg-magenta
+                 :fg-cyan
+                 :fg-white
+                 :fg-rgb
+                 :fg-default
+                 :bg-black
+                 :bg-red
+                 :bg-green
+                 :bg-yellow
+                 :bg-blue
+                 :bg-magenta
+                 :bg-cyan
+                 :bg-white
+                 :bg-rgb
+                 :bg-default
+                 :fg-grey
+                 :fg-bright-red
+                 :fg-bright-green
+                 :fg-bright-yellow
+                 :fg-bright-blue
+                 :fg-bright-magenta
+                 :fg-bright-cyan
+                 :fg-bright-white
+                 :bg-grey
+                 :bg-bright-red
+                 :bg-bright-green
+                 :bg-bright-yellow
+                 :bg-bright-blue
+                 :bg-bright-magenta
+                 :bg-bright-cyan
+                 :bg-bright-white]))
 
-(print-samples "-[Sanity on/off]-"
+(print-samples "membrane.term - questionable, 21 treated as not-bold, iTerm2 ignores, GNOME double underlines"
+               [(str (sample-text :bold)
+                     (sample-text :not-bold)
+                     (ansi-by-key :clear))])
+
+(print-samples "membrane.term - interesting candidates"
+               (sample-text-for-keys
+                [:dim
+                 :underline
+                 :slow-blink
+                 :inverted
+                 :strikeout
+                 :not-underlined
+                 :not-blinking
+                 :not-inverted
+                 :not-strikeout]))
+
+(print-samples "membrane.term - maybe someday?"
+               (sample-text-for-keys
+                [:rapid-blink
+                 :hide
+                 :reveal
+                 :overlined
+                 :not-overlined
+                 :underline-color
+                 :default-underline-color]))
+
+(print-samples "sanity on/off tests"
                [(str (sample-text :bold)
                      (sample-text :dim)
                      (sample-text :normal-intensity)
@@ -197,7 +261,7 @@
                      (sample-text :not-strikeout)
                      (ansi-by-key :clear))])
 
-(print-samples "-[Sanity rgb]-"
+(print-samples "sanity rgb tests"
                [(str (sample-text :bg-rgb 5 130)
                      (ansi-by-key :clear))
                 (str (sample-text :bg-rgb 2 100 200 43)
@@ -207,15 +271,10 @@
                      (sample-text :bg-default)
                      (ansi-by-key :clear))])
 
-(print-samples "-[membrane.term treats 21 as not-bold, iTerm2 ignores, GNOME double underlines]-"
-               [(str (sample-text :bold)
-                     (sample-text :not-bold)
-                     (ansi-by-key :clear))])
-
-(print-samples "-[These work for GNOME Terminal]-"
+(print-samples "interesting, these work for GNOME Terminal"
                [(str (sample-text :rapid-blink)
                      (sample-text :not-blinking)
-                     (sample-text :clear))
+                     (ansi-by-key :clear))
                 (str (sample-text :overlined)
                      (sample-text :not-overlined)
                      (ansi-by-key :clear))
@@ -225,20 +284,38 @@
                      (sample-text :default-underline-color)
                      (ansi-by-key :clear))])
 
-(print-samples "-[Who supports hide/reveal? GNOME Terminal!]-"
+(print-samples "who supports hide/reveal? GNOME Terminal!"
                [(str (sample-text :hide)
                      (sample-text :reveal)
                      (ansi-by-key :clear))])
 
-(print-samples "-[Codes expected to be no-op]-"
-               (sample-text-for-codes
-                 (concat (range 10 21)
-                         [26 28]
-                         (range 50 53)
-                         [54]
-                         (range 60 66)
-                         (range 73 76))))
-
+(print-samples "codes expected to be no-op (update as we find current terminals that support in the wild)"
+               (sample-text-for-keys
+                [:primary-font
+                 :alt-font-1
+                 :alt-font-2
+                 :alt-font-3
+                 :alt-font-4
+                 :alt-font-5
+                 :alt-font-6
+                 :alt-font-7
+                 :alt-font-8
+                 :alt-font-9
+                 :fraktur
+                 :proportional
+                 :disable-proportional
+                 :framed
+                 :encircled
+                 :not-framed-nor-circled
+                 :ideogram-underline
+                 :ideogram-double-underline
+                 :ideogram-overline
+                 :ideogram-double-overline
+                 :ideogram-stress
+                 :ideogram-clear
+                 :superscript
+                 :subscript
+                 :not-super-sub-script]))
 
 (let [missed (apply dissoc sgr-codes @keys-visited)]
   (if (seq missed)
