@@ -123,7 +123,13 @@
 (defn- sample-text [k & params]
   (let [lbl (name k)
         code (get-sgr-code k)]
-    (format "%s%03d%s-%s " (apply ansi code params) code (if (seq params) (vec params) "") lbl)))
+    (format "%s%03d%s-%s "
+            (apply ansi code params)
+            code
+            (if (seq params)
+              (str ";" (string/join ";" params))
+              "")
+            lbl)))
 
 (defn sample-text-for-codes [codes]
   (map (fn [c]
@@ -141,8 +147,8 @@
                      (map count)
                      (reduce max))
         col-width (+ max-len 4)
-        screen-width 84
-        num-cols (int (/ screen-width col-width))
+        screen-width 120
+        num-cols (if (> col-width screen-width) 1 (int (/ screen-width col-width)))
         col-width (/ screen-width num-cols)]
     (->> samples
          (map (fn [s] (let [len (count (stripped s))
@@ -156,7 +162,7 @@
          (run! print)))
   (println))
 
-(print-samples "-[Candidates for Support]-"
+(print-samples "-[Current strong candidates for Support]-"
                (sample-text-for-codes
                 (concat
                   (range 0 6)
@@ -201,26 +207,38 @@
                      (sample-text :bg-default)
                      (ansi-by-key :clear))])
 
-(print-samples "-[membrane.term handles this but iTerm2 does not]-"
+(print-samples "-[membrane.term treats 21 as not-bold, iTerm2 ignores, GNOME double underlines]-"
                [(str (sample-text :bold)
                      (sample-text :not-bold)
                      (ansi-by-key :clear))])
 
+(print-samples "-[These work for GNOME Terminal]-"
+               [(str (sample-text :rapid-blink)
+                     (sample-text :not-blinking)
+                     (sample-text :clear))
+                (str (sample-text :overlined)
+                     (sample-text :not-overlined)
+                     (ansi-by-key :clear))
+                (str (sample-text :underline)
+                     (sample-text :underline-color 5 130)
+                     (sample-text :underline-color 2 52 180 235)
+                     (sample-text :default-underline-color)
+                     (ansi-by-key :clear))])
+
+(print-samples "-[Who supports hide/reveal? GNOME Terminal!]-"
+               [(str (sample-text :hide)
+                     (sample-text :reveal)
+                     (ansi-by-key :clear))])
+
 (print-samples "-[Codes expected to be no-op]-"
                (sample-text-for-codes
-                 (concat [6 8]
-                         (range 10 22)
+                 (concat (range 10 21)
                          [26 28]
-                         (range 50 56)
-                         [59]
+                         (range 50 53)
+                         [54]
                          (range 60 66)
                          (range 73 76))))
 
-(print-samples "-[This doesn't seem to work, or I don't understand? And that's probably just fine]-"
-               [(str (sample-text :underline)
-                     (sample-text :underline-color 5 130)
-                     (sample-text :underline)
-                     (ansi-by-key :clear))])
 
 (let [missed (apply dissoc sgr-codes @keys-visited)]
   (if (seq missed)
