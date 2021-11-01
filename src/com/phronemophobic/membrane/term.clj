@@ -362,6 +362,11 @@
        (.close (.getInputStream pty))
        (.close (.getOutputStream pty))))))
 
+(let [save-image!* (or (resolve 'backend/save-to-image!)
+                       (resolve 'backend/draw-to-image!))]
+  (defn- save-image! [fname out]
+    (save-image!* fname out)))
+
 (defn screenshot
   ([{:keys [play width height out line-delay final-delay color-scheme font-family font-size]
      :as _opts
