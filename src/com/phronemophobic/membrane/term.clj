@@ -4,7 +4,7 @@
             [clojure.string :as string]
             [com.phronemophobic.membrane.term.color-scheme :as color-scheme]
             [membrane.ui :as ui]
-            [membrane.skia :as skia])
+            [membrane.java2d :as backend])
   (:import [com.pty4j PtyProcess WinSize]))
 
 
@@ -246,7 +246,7 @@
            )
 
 
-         (when (not (zero? (bit-and skia/GLFW_MOD_CONTROL mods)))
+         (when (not (zero? (bit-and ui/CONTROL-MASK mods)))
            (when (< key 128)
              (case (char key)
                (\A \B \C \D \E \F \G \H \I \J \K \L \M \N \O \P \Q \R \S \T \U \V \W \X \Y \Z)
@@ -263,18 +263,18 @@
 
                nil)))
 
-         (when (not (zero? (bit-and skia/GLFW_MOD_ALT mods)))
+         (when (not (zero? (bit-and ui/ALT-MASK mods)))
            (when (< key 128)
              (case (char key)
 
                (\A \B \C \D \E \F \G \H \I \J \K \L \M \N \O \P \Q \R \S \T \U \V \W \X \Y \Z)
-               (let [key (if (zero? (bit-and skia/GLFW_MOD_SHIFT mods))
+               (let [key (if (zero? (bit-and ui/SHIFT-MASK mods))
                            (- key (- (int \A) (int \a)))
                            key)]
                  (writec-bytes out [0x1b key]))
 
                ;; else
-               (let [key (if (not (zero? (bit-and skia/GLFW_MOD_SHIFT mods)))
+               (let [key (if (not (zero? (bit-and ui/SHIFT-MASK mods)))
                            (when-let [c (get meta-shift-map (char key))]
                              (int c))
                            key)]
@@ -350,7 +350,7 @@
          font (load-terminal-font font-family font-size)]
      (swap! term-state assoc
             :pty (run-pty-process width height term-state))
-     (skia/run-sync
+     (backend/run-sync
       (fn []
         (let [{:keys [pty vt]} @term-state]
           (term-events pty
