@@ -219,26 +219,26 @@
        (when (#{:press :repeat} action)
          (case (int key)
            ;; backspace
-           259 (writec-bytes out [0x7f])
+           (8 259) (writec-bytes out [0x7f])
 
            ;; escape
-           256 (writec-bytes out [0x1b])
+           (27 256) (writec-bytes out [0x1b])
 
            ;; tab
-           258 (writec-bytes out [(int \tab)])
+           (9 258) (writec-bytes out [(int \tab)])
 
 
-           262 ;; right
+           (39 262) ;; right
            (writec-bytes out (map int [033 \[ \C]))
 
-           #_left 263
+           #_left (37 263)
            (writec-bytes out (map int [033 \[ \D]))
 
-           264 (writec-bytes out (map int [033 \[ \B]))
+           (40 264) (writec-bytes out (map int [033 \[ \B]))
            ;; down
 
            ;; up
-           265
+           (38 265)
            (writec-bytes out (map int [0x1b \[ \A]))
 
            ;; default
@@ -247,39 +247,38 @@
 
 
          (when (not (zero? (bit-and ui/CONTROL-MASK mods)))
-           (when (< key 128)
-             (case (char key)
-               (\A \B \C \D \E \F \G \H \I \J \K \L \M \N \O \P \Q \R \S \T \U \V \W \X \Y \Z)
-               (let [b (inc (- key (int \A) ))]
-                 (writec-bytes out [b]))
+           (case (char key)
+             (\A \B \C \D \E \F \G \H \I \J \K \L \M \N \O \P \Q \R \S \T \U \V \W \X \Y \Z)
+             (let [b (inc (- key (int \A) ))]
+               (writec-bytes out [b]))
 
-               \space
-               (let [b (inc (- (int (char \@)) (int \A) ))]
-                 (writec-bytes out [b]))
+             \space
+             (let [b (inc (- (int (char \@)) (int \A) ))]
+               (writec-bytes out [b]))
 
-               \-
-               (let [b (inc (- (int \_) (int \A)))]
-                 (writec-bytes out [b]))
+             \-
+             (let [b (inc (- (int \_) (int \A)))]
+               (writec-bytes out [b]))
 
-               nil)))
+             nil))
 
-         (when (not (zero? (bit-and ui/ALT-MASK mods)))
-           (when (< key 128)
-             (case (char key)
+         (when (or (not (zero? (bit-and ui/ALT-MASK mods)))
+                   (not (zero? (bit-and ui/SUPER-MASK mods))))
+           (case (char key)
 
-               (\A \B \C \D \E \F \G \H \I \J \K \L \M \N \O \P \Q \R \S \T \U \V \W \X \Y \Z)
-               (let [key (if (zero? (bit-and ui/SHIFT-MASK mods))
-                           (- key (- (int \A) (int \a)))
-                           key)]
-                 (writec-bytes out [0x1b key]))
+             (\A \B \C \D \E \F \G \H \I \J \K \L \M \N \O \P \Q \R \S \T \U \V \W \X \Y \Z)
+             (let [key (if (zero? (bit-and ui/SHIFT-MASK mods))
+                         (- key (- (int \A) (int \a)))
+                         key)]
+               (writec-bytes out [0x1b key]))
 
-               ;; else
-               (let [key (if (not (zero? (bit-and ui/SHIFT-MASK mods)))
-                           (when-let [c (get meta-shift-map (char key))]
-                             (int c))
-                           key)]
-                 (when key
-                   (writec-bytes out [0x1b key])))))))
+             ;; else
+             (let [key (if (not (zero? (bit-and ui/SHIFT-MASK mods)))
+                         (when-let [c (get meta-shift-map (char key))]
+                           (int c))
+                         key)]
+               (when key
+                 (writec-bytes out [0x1b key]))))))
        nil
        )
      :key-press

@@ -3,8 +3,11 @@
         org.clojure/data.xml {:mvn/version "0.2.0-alpha6"}
         org.clojure/data.zip {:mvn/version "1.0.0"}
         dev.nubank/docopt {:mvn/version "0.6.1-fix7"}
-        com.phronemophobic/membrane {:mvn/version "0.9.31.0-beta"
+        com.phronemophobic/membrane {;;:mvn/version "0.9.31.0-beta"
                                      ;; :local/root "../membrane2"
+
+                                     :git/sha "e53dafa68d2f336519e35dc44a60aede370b8f35"
+                                     :git/url "https://github.com/phronmophobic/membrane"
                                      }
         com.phronemophobic.membrane/skialib-macosx-aarch64
         {:mvn/version "0.9.31.0-beta"
