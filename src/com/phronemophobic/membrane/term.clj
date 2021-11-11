@@ -1,5 +1,6 @@
 (ns com.phronemophobic.membrane.term
   (:require [asciinema.vt :as vt]
+            [clojure.java.io :as io]
             [clojure.string :as string]
             [com.phronemophobic.membrane.term.color-scheme :as color-scheme]
             [membrane.ui :as ui]
@@ -301,11 +302,12 @@
               (.setWinSize (WinSize. width height)))]
     (future
       (try
-        (loop []
-          (let [input (.read (.getInputStream pty))]
-            (when (not= -1 input)
-              (swap! term-state update :vt vt/feed-one input)
-              (recur))))
+        (with-open [in (io/reader (.getInputStream pty))]
+          (loop []
+            (let [input (.read in)]
+              (when (not= -1 input)
+                (swap! term-state update :vt vt/feed-one input)
+                (recur)))))
         (catch Exception e
           (prn e))))
     pty))
