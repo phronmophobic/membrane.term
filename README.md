@@ -53,7 +53,7 @@ A demo of the types of things you can do:
 You can also optional specify:
 - `-w, --width` width of the terminal window in character columns (default: 90)
 - `-h, --height` height of the terminal window in character rows (default: 30)
-- [`-s, --color-scheme`](#color-schemes) choose a different color scheme
+- [`--color-scheme`](#color-schemes) choose a different color scheme
 
 ### Run a headless terminal and take a screenshot
 
@@ -85,12 +85,12 @@ You must specify:
 You can also optionally specify:
 - `-w, --width` width of the terminal window in character columns (default: 90)
 - `-h, --height` height of the terminal window in character columns (default: 30)
-- [`-s, --color-scheme`](#color-schemes) choose a different color scheme
 - `-o, --out` filename of the image file to generate (default: terminal.png)\
+- [`--color-scheme`](#color-schemes) choose a different color scheme
 Image format determined by filename extension, supported extensions are `.png`, `.webp`, `.jpeg` and `.jpg`.
-- `-l, --line-delay` if your play script runs a command like `lein repl`, the underlying program might not be ready to accept input immediately.\
+- `--line-delay` if your play script runs a command like `lein repl`, the underlying program might not be ready to accept input immediately.\
 You can specify a delay in ms to wait after each line is played to the terminal (default: 1000)
-- `-f, --final-delay` after the last line of your play script is run, you might need to wait for it to generate all of its output.\
+- `--final-delay` after the last line of your play script is run, you might need to wait for it to generate all of its output.\
 You can specify a delay in ms to wait after the entire script has been played to the terminal  (default: 10000)
 
 Given play script `play-deep-diff.sh`:
