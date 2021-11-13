@@ -21,3 +21,11 @@ As hinted by our README, you can also use `msgcat`'s color test:
 msgcat --color=test
 ```
 This tool is available on most Linux and macOS systems.
+
+## Adding Command-Line Options
+
+Our command-line options are expressed as longopts, and sometimes equivalent shortops.
+For example, terminal width in characters can be conveyed by longopt `--width` or shortop `-w`.
+
+Because they are a single character, it can be challenging to choose meaningful new shortops that do not conflict with existing shortops.
+For this reason, we limit introducing new shortops for what we feel might be the more commonly used command-line options.

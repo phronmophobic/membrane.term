@@ -15,13 +15,13 @@ Usage:
 Common Options:
   -w, --width=<cols>         Width in characters [default: 90]
   -h, --height=<rows>        Height in characters [default: 30]
-  -s, --color-scheme=<path>  Local path or url to iTerm .itermcolors scheme file, uses internal scheme by default.
+      --color-scheme=<path>  Local path or url to iTerm .itermcolors scheme file, uses internal scheme by default.
 
 Screenshot Options:
   -p, --play=<path>          Path to script to play in terminal
   -o, --out=<file>           Filename of the image to generate [default: terminal.png]
-  -l, --line-delay=<ms>      Delay in ms to wait after each line is sent to the terminal [default: 1000]
-  -f, --final-delay=<ms>     Delay in ms to wait before writing the view of the terminal [default: 10000]
+      --line-delay=<ms>      Delay in ms to wait after each line is sent to the terminal [default: 1000]
+      --final-delay=<ms>     Delay in ms to wait before writing the view of the terminal [default: 10000]
 
 Replace membrane.term with your appropriate Clojure tools CLI launch sequence. For example:
 |
