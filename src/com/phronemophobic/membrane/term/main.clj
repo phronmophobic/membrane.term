@@ -8,8 +8,9 @@
   "membrane.term
 
 Usage:
-  membrane.term run-term   [--width=<cols>] [--height=<rows>] [--color-scheme=<path>]
-  membrane.term screenshot --play=<path> [--width=<cols>] [--height=<rows>] [--color-scheme=<path>] [--out=<file>] [--line-delay=<ms>] [--final-delay=<ms>]
+  membrane.term run-term [--width=<cols>] [--height=<rows>] [--color-scheme=<path>]
+  membrane.term screenshot --play=<path> [--width=<cols>] [--height=<rows>] \\
+   [--color-scheme=<path>] [--out=<file>] [--line-delay=<ms>] [--final-delay=<ms>]
   membrane.term --help
 
 Common Options:
@@ -28,14 +29,15 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
 | clojure -M:membrane.term run-term -w 133 -h 60
 |")
 
-(defn- parse-pos-int [v]
-  (let [num (if (integer? v)
-                 v
-                 (when (and (string? v) (re-matches #"\d+" v))
-                   (Integer/parseInt v)))]
-    (if (and num (> num 0))
-      num
-      {:error "expected positive integer"})))
+(defn- parse-pos-int [min]
+  (fn [v]
+    (let [num (if (integer? v)
+                v
+                (when (and (string? v) (re-matches #"\d+" v))
+                  (Integer/parseInt v)))]
+      (if (and num (>= num min))
+        num
+        {:error (format "expected positive integer >= %d" min)}))))
 
 (defn- parse-existing-path [v]
   (when v
@@ -69,16 +71,21 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
                [(keyword (string/replace-first k #"^--" "")) v])
              arg-map)))
 
+(defn- undo-line-continuations
+  "Docopt does not seem to support line continuations, but I feel they make the usage help readable."
+  [usage]
+  (string/replace usage #"\\\R" ""))
+
 (defn -main [& args]
-  (docopt/docopt docopt-usage args
+  (docopt/docopt (undo-line-continuations docopt-usage) args
                  (fn result-fn [arg-map]
-                   (let [arg-map (validate-args arg-map {"--width" parse-pos-int
-                                                         "--height" parse-pos-int
+                   (let [arg-map (validate-args arg-map {"--width" (parse-pos-int 1)
+                                                         "--height" (parse-pos-int 1)
                                                          "--play" parse-existing-path
                                                          "--color-scheme" parse-existing-path
                                                          "--out" parse-image-out
-                                                         "--line-delay" parse-pos-int
-                                                         "--final-delay" parse-pos-int})]
+                                                         "--line-delay" (parse-pos-int 0)
+                                                         "--final-delay" (parse-pos-int 0)})]
                      (if-let [error (:error arg-map)]
                        (do
                          (println (format "*\n* Error: %s\n*\n" error))
