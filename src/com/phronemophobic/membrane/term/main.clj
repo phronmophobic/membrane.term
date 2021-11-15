@@ -29,7 +29,7 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
 | clojure -M:membrane.term run-term -w 133 -h 60
 |")
 
-(defn- parse-pos-int [min]
+(defn- int-parser-validator [min]
   (fn [v]
     (let [num (if (integer? v)
                 v
@@ -79,13 +79,13 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
 (defn -main [& args]
   (docopt/docopt (undo-line-continuations docopt-usage) args
                  (fn result-fn [arg-map]
-                   (let [arg-map (validate-args arg-map {"--width" (parse-pos-int 1)
-                                                         "--height" (parse-pos-int 1)
+                   (let [arg-map (validate-args arg-map {"--width" (int-parser-validator 1)
+                                                         "--height" (int-parser-validator 1)
                                                          "--play" parse-existing-path
                                                          "--color-scheme" parse-existing-path
                                                          "--out" parse-image-out
-                                                         "--line-delay" (parse-pos-int 0)
-                                                         "--final-delay" (parse-pos-int 0)})]
+                                                         "--line-delay" (int-parser-validator 0)
+                                                         "--final-delay" (int-parser-validator 0)})]
                      (if-let [error (:error arg-map)]
                        (do
                          (println (format "*\n* Error: %s\n*\n" error))
