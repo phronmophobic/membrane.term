@@ -90,37 +90,41 @@
         (do (println "color not found: " vt-color)
             (color-scheme :red))))))
 
+(defn- character
+  "The current membrane ui label fn draws from the top left bounding corner, offset downward by the font's descent gap
 
+  ```
+    ascent line -----------------------------
+                            oo
 
-(defn wrap-color [color-scheme c elem]
-  (if c
-    (ui/with-color (vt-color->term-color color-scheme c)
-      elem)
-    elem))
+                          oooo
+                            oo
+                            oo
+                            oo
+                            oo
+                            oo
+    baseline ---------      oo -------------
+                       oo  ooo         ↑
+                        ooooo     descent gap
+                         ooo           ↓
+    descent line ----------------------------
 
-(def term-font
-  (cond
-    (skia/font-exists? (ui/font "Menlo" 12))
-    (ui/font "Menlo" 12)
+  ```
+  We don't want the descent gap offset, so we translate it away."
+  [{:keys [term-font descent-gap] :as _font}
+   c
+   {:keys [bold italic] :as _char-attrs}]
+  (ui/translate 0 (- descent-gap)
+                (ui/label (Character/toString (char c))
+                          (assoc term-font
+                                 :weight (if bold
+                                           :bold
+                                           :normal)
+                                 :slant (if italic
+                                          :italic
+                                          :upright)))))
 
-    :else (ui/font "monospace" 12)))
-
-(def font-metrics (skia/skia-font-metrics term-font))
-(def cell-width (skia/skia-advance-x term-font " "))
-(def cell-height (skia/skia-line-height term-font))
-(def bg-offset (:Descent font-metrics))
-
-(defn- character [c {:keys [bold italic]}]
-  (ui/label (Character/toString (char c))
-            (assoc term-font
-                   :weight (if bold
-                             :bold
-                             :normal)
-                   :slant (if italic
-                            :italic
-                            :upright))))
-
-(defn term-line [color-scheme line]
+(defn term-line [color-scheme {:keys [cell-width cell-height] :as font} line]
   (into []
         (comp
          (map-indexed vector)
@@ -131,12 +135,11 @@
             (let [foreground (ui/with-color (if-let [vt-color (:fg attrs)]
                                               (vt-color->term-color color-scheme vt-color)
                                               (:foreground color-scheme))
-                               (character c attrs))
-                  background (when-let [bg (:bg attrs)]
-                               (ui/translate 0 bg-offset
-                                             (wrap-color color-scheme bg
-                                                         (ui/rectangle (inc cell-width)
-                                                                       (inc cell-height)))))]
+                               (character font c attrs))
+                  background (when-let [vt-color (:bg attrs)]
+                               (ui/with-color (vt-color->term-color color-scheme vt-color)
+                                 (ui/rectangle (inc cell-width)
+                                               (inc cell-height))))]
 
               (ui/translate
                (* cell-width i) 0
@@ -148,17 +151,17 @@
 (def term-line-memo (memoize term-line))
 (def window-padding-height 8)
 
-(defn term-view [color-scheme vt]
+(defn term-view [color-scheme {:keys [cell-width cell-height] :as font} vt]
   (let [screen (:screen vt)
         cursor (let [{:keys [x y visible]} (:cursor screen)]
                  (when visible
                    (ui/translate
                     (* cell-width x) (* cell-height y)
-                    [(ui/translate 0 bg-offset
-                      (ui/with-color (:cursor color-scheme)
-                        (ui/rectangle (inc cell-width) (inc cell-height))))
+                    [(ui/with-color (:cursor color-scheme)
+                       (ui/rectangle (inc cell-width) (inc cell-height)))
                      (ui/with-color  (:cursor-text color-scheme)
-                       (apply character (-> vt :screen :lines (nth y) (nth x))))])))]
+                       (let [[c attrs] (-> vt :screen :lines (nth y) (nth x))]
+                         (character font c attrs)))])))]
     (ui/no-events
      (conj [(ui/with-color (:background color-scheme)
               (ui/rectangle (* cell-width (:width screen))
@@ -169,7 +172,7 @@
                           (ui/translate
                            0 (* i cell-height)
                            (ui/->Cached
-                            (term-line-memo color-scheme line))))))
+                            (term-line-memo color-scheme font line))))))
                  (-> vt :screen :lines))
            cursor))))
 
@@ -317,39 +320,50 @@
     (color-scheme/load-scheme source)
     default-color-scheme))
 
+(defn font-exists? [font-family font-size]
+  (or (= "monospace" font-family)
+      (skia/font-exists? (ui/font font-family font-size))))
+
+(defn- load-terminal-font
+  "No checking is done, but font is assumed to be monospaced with a constant advancement width."
+  [font-family font-size]
+  (let [term-font (if (font-exists? font-family font-size)
+                    (ui/font font-family font-size)
+                    (ui/font "monospace" 12))
+        metrics (skia/skia-font-metrics term-font)
+        baseline-offset (- (:Ascent metrics))
+        descent-offset (+ baseline-offset (:Descent metrics))]
+    {:term-font term-font
+     :cell-width (skia/skia-advance-x term-font " ")
+     :cell-height (skia/skia-line-height term-font)
+     :descent-gap (- descent-offset baseline-offset)}))
+
 (defn run-term
   ([]
    (run-term {}))
-  ([{:keys [width height color-scheme]
+  ([{:keys [width height color-scheme font-family font-size]
      :as _opts
      :or {width 90
           height 30}}]
    (let [term-state (atom {:vt (vt/make-vt width height)})
-         color-scheme (load-color-scheme color-scheme)]
+         color-scheme (load-color-scheme color-scheme)
+         font (load-terminal-font font-family font-size)]
      (swap! term-state assoc
             :pty (run-pty-process width height term-state))
      (skia/run-sync
       (fn []
         (let [{:keys [pty vt]} @term-state]
           (term-events pty
-                       (term-view color-scheme vt))))
-      {:window-start-width (* width cell-width)
-       :window-start-height (+ window-padding-height (* height cell-height))})
+                       (term-view color-scheme font vt))))
+      {:window-start-width (* width (:cell-width font))
+       :window-start-height (+ window-padding-height (* height (:cell-height font)))})
 
      (let [^PtyProcess pty (:pty @term-state)]
        (.close (.getInputStream pty))
        (.close (.getOutputStream pty))))))
 
-(comment
-  (run-term)
-  (run-term {:color-scheme "https://raw.githubusercontent.com/mbadolato/iTerm2-Color-Schemes/master/schemes/Builtin%20Solarized%20Dark.itermcolors"})
-  (run-term {:color-scheme "https://raw.githubusercontent.com/mbadolato/iTerm2-Color-Schemes/master/schemes/Ocean.itermcolors"})
-
-  (run-term {:color-scheme "https://raw.githubusercontent.com/mbadolato/iTerm2-Color-Schemes/master/schemes/Belafonte%20Day.itermcolors"})
-  )
-
 (defn screenshot
-  ([{:keys [play width height out line-delay final-delay color-scheme]
+  ([{:keys [play width height out line-delay final-delay color-scheme font-family font-size]
      :as _opts
      :or {width 90
           height 30
@@ -357,7 +371,8 @@
           final-delay 10e3
           out "terminal.png"}}]
    (let [term-state (atom {:vt (vt/make-vt width height)})
-         color-scheme (load-color-scheme color-scheme)]
+         color-scheme (load-color-scheme color-scheme)
+         font (load-terminal-font font-family font-size)]
      (swap! term-state assoc
             :pty (run-pty-process width height term-state))
      (doseq [line (string/split-lines (slurp play))]
@@ -368,7 +383,7 @@
      (Thread/sleep final-delay)
      (skia/draw-to-image! out
                           (ui/fill-bordered (:background color-scheme) 5
-                                            (term-view color-scheme (:vt @term-state))))
+                                            (term-view color-scheme font (:vt @term-state))))
      (println (str "Wrote screenshot to " out "."))
 
      (let [^PtyProcess pty (:pty @term-state)]

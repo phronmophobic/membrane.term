@@ -23,3 +23,11 @@ clj -M:membrane.term screenshot \
     --height 14 \
     --color-scheme "doc/examples/Builtin Solarized Dark.itermcolors" \
     --out doc/images/screenshot-msgcat-scheme.png
+
+echo "- msgcat with font -"
+clj -M:membrane.term screenshot \
+    --play doc/examples/play-msgcat.sh \
+    --height 14 \
+    --font-family "NovaMono" \
+    --font-size 16 \
+    --out doc/images/screenshot-msgcat-font.png
