@@ -320,23 +320,23 @@
     (color-scheme/load-scheme source)
     default-color-scheme))
 
-(defn font-exists? [font-family font-size]
+(defn font-valid? [font-family font-size]
   (or (= "monospace" font-family)
       (skia/font-exists? (ui/font font-family font-size))))
 
 (defn- load-terminal-font
   "No checking is done, but font is assumed to be monospaced with a constant advancement width."
   [font-family font-size]
-  (let [term-font (if (font-exists? font-family font-size)
-                    (ui/font font-family font-size)
-                    (ui/font "monospace" 12))
-        metrics (skia/skia-font-metrics term-font)
-        baseline-offset (- (:Ascent metrics))
-        descent-offset (+ baseline-offset (:Descent metrics))]
-    (merge term-font
-           #:membrane.term {:cell-width (skia/skia-advance-x term-font " ")
-                            :cell-height (skia/skia-line-height term-font)
-                            :descent-gap (- descent-offset baseline-offset)})))
+  (if-not (font-valid? font-family font-size)
+    (throw (ex-info (format "Invalid font: family: %s, size %s" font-family font-size) {}))
+    (let [term-font (ui/font font-family font-size)
+          metrics (skia/skia-font-metrics term-font)
+          baseline-offset (- (:Ascent metrics))
+          descent-offset (+ baseline-offset (:Descent metrics))]
+      (merge term-font
+             #:membrane.term {:cell-width (skia/skia-advance-x term-font " ")
+                              :cell-height (skia/skia-line-height term-font)
+                              :descent-gap (- descent-offset baseline-offset)}))))
 
 (defn run-term
   ([]

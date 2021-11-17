@@ -65,7 +65,7 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
 (defn- validate-font [args]
   (let [font-family (get args "--font-family")
         font-size (get args "--font-size")]
-    (when-not (term/font-exists? font-family font-size)
+    (when-not (term/font-valid? font-family font-size)
       {:error (format "font family %s, size %d not found" font-family font-size)})))
 
 (defn- validate-args [args args-def post-validations]
