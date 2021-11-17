@@ -324,10 +324,6 @@
   (or (= "monospace" font-family)
       (skia/font-exists? (ui/font font-family font-size))))
 
-(skia/font-exists? (ui/font "monospace" 12))
-;; => false
-
-
 (defn- load-terminal-font
   "No checking is done, but font is assumed to be monospaced with a constant advancement width."
   [font-family font-size]
