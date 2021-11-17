@@ -8,15 +8,19 @@
   "membrane.term
 
 Usage:
-  membrane.term run-term [--width=<cols>] [--height=<rows>] [--color-scheme=<path>]
+  membrane.term run-term [--width=<cols>] [--height=<rows>] \\
+   [--color-scheme=<path>] [--font-family=<font>] [--font-size=<points>]
   membrane.term screenshot --play=<path> [--width=<cols>] [--height=<rows>] \\
-   [--color-scheme=<path>] [--out=<file>] [--line-delay=<ms>] [--final-delay=<ms>]
+   [--color-scheme=<path>] [--font-family=<font>] [--font-size=<points>]\\
+   [--out=<file>] [--line-delay=<ms>] [--final-delay=<ms>]
   membrane.term --help
 
 Common Options:
   -w, --width=<cols>         Width in characters [default: 90]
   -h, --height=<rows>        Height in characters [default: 30]
       --color-scheme=<path>  Local path or url to iTerm .itermcolors scheme file, uses internal scheme by default.
+      --font-family=<font>   Choose an OS installed font [default: monospace]
+      --font-size=<points>   Specify the font point size [default: 12]
 
 Screenshot Options:
   -p, --play=<path>          Path to script to play in terminal
@@ -28,6 +32,9 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
 |
 | clojure -M:membrane.term run-term -w 133 -h 60
 |")
+
+(defn- parse-string [v]
+  (str v))
 
 (defn- int-parser-validator [min]
   (fn [v]
@@ -55,15 +62,26 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
         p
         {:error "supported image formats are png, webp and jpeg (aka jpg)."}))))
 
-(defn- validate-args [args args-def]
-  (reduce-kv (fn [m k v]
-               (let [od (get args-def k)
-                     v ((or od identity) v)]
-                 (if (:error v)
-                   (reduced {:error (format "%s: %s" k (:error v))})
-                   (assoc m k v))))
-             {}
-             args))
+(defn- validate-font [args]
+  (let [font-family (get args "--font-family")
+        font-size (get args "--font-size")]
+    (when-not (term/font-valid? font-family font-size)
+      {:error (format "font family %s, size %d not found" font-family font-size)})))
+
+(defn- validate-args [args args-def post-validations]
+  (let [parsed-args (reduce-kv (fn [m k v]
+                                 (let [od (get args-def k)
+                                       v ((or od identity) v)]
+                                   (if (:error v)
+                                     (reduced {:error (format "%s: %s" k (:error v))})
+                                     (assoc m k v))))
+                               {}
+                               args)]
+    (if (:error parsed-args)
+      parsed-args
+      (if-let [validation-error (first (keep #(% parsed-args) post-validations))]
+        validation-error
+        parsed-args))))
 
 (defn- keywordize [arg-map]
   (into {}
@@ -85,7 +103,10 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
                                                          "--color-scheme" parse-existing-path
                                                          "--out" parse-image-out
                                                          "--line-delay" (int-parser-validator 0)
-                                                         "--final-delay" (int-parser-validator 0)})]
+                                                         "--final-delay" (int-parser-validator 0)
+                                                         "--font-family" parse-string
+                                                         "--font-size" (int-parser-validator 1)}
+                                                [validate-font])]
                      (if-let [error (:error arg-map)]
                        (do
                          (println (format "*\n* Error: %s\n*\n" error))
