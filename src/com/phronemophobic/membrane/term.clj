@@ -111,12 +111,12 @@
 
   ```
   We don't want the descent gap offset, so we translate it away."
-  [{:keys [term-font descent-gap] :as _font}
+  [{:keys [:membrane.term/descent-gap] :as font}
    c
    {:keys [bold italic] :as _char-attrs}]
   (ui/translate 0 (- descent-gap)
                 (ui/label (Character/toString (char c))
-                          (assoc term-font
+                          (assoc font
                                  :weight (if bold
                                            :bold
                                            :normal)
@@ -124,7 +124,7 @@
                                           :italic
                                           :upright)))))
 
-(defn term-line [color-scheme {:keys [cell-width cell-height] :as font} line]
+(defn term-line [color-scheme {:keys [:membrane.term/cell-width :membrane.term/cell-height] :as font} line]
   (into []
         (comp
          (map-indexed vector)
@@ -151,7 +151,7 @@
 (def term-line-memo (memoize term-line))
 (def window-padding-height 8)
 
-(defn term-view [color-scheme {:keys [cell-width cell-height] :as font} vt]
+(defn term-view [color-scheme {:keys [:membrane.term/cell-width :membrane.term/cell-height] :as font} vt]
   (let [screen (:screen vt)
         cursor (let [{:keys [x y visible]} (:cursor screen)]
                  (when visible
@@ -324,6 +324,10 @@
   (or (= "monospace" font-family)
       (skia/font-exists? (ui/font font-family font-size))))
 
+(skia/font-exists? (ui/font "monospace" 12))
+;; => false
+
+
 (defn- load-terminal-font
   "No checking is done, but font is assumed to be monospaced with a constant advancement width."
   [font-family font-size]
@@ -333,10 +337,10 @@
         metrics (skia/skia-font-metrics term-font)
         baseline-offset (- (:Ascent metrics))
         descent-offset (+ baseline-offset (:Descent metrics))]
-    {:term-font term-font
-     :cell-width (skia/skia-advance-x term-font " ")
-     :cell-height (skia/skia-line-height term-font)
-     :descent-gap (- descent-offset baseline-offset)}))
+    (merge term-font
+           #:membrane.term {:cell-width (skia/skia-advance-x term-font " ")
+                            :cell-height (skia/skia-line-height term-font)
+                            :descent-gap (- descent-offset baseline-offset)})))
 
 (defn run-term
   ([]
@@ -355,8 +359,8 @@
         (let [{:keys [pty vt]} @term-state]
           (term-events pty
                        (term-view color-scheme font vt))))
-      {:window-start-width (* width (:cell-width font))
-       :window-start-height (+ window-padding-height (* height (:cell-height font)))})
+      {:window-start-width (* width (:membrane.term/cell-width font))
+       :window-start-height (+ window-padding-height (* height (:membrane.term/cell-height font)))})
 
      (let [^PtyProcess pty (:pty @term-state)]
        (.close (.getInputStream pty))
