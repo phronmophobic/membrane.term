@@ -2,6 +2,7 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as string]
             [com.phronemophobic.membrane.term :as term]
+            [membrane.toolkit :as tk]
             [docopt.core :as docopt]))
 
 (def docopt-usage
@@ -9,10 +10,10 @@
 
 Usage:
   membrane.term run-term [--width=<cols>] [--height=<rows>] \\
-   [--color-scheme=<path>] [--font-family=<font>] [--font-size=<points>]
+   [--color-scheme=<path>] [--font-family=<font>] [--font-size=<points>] [--toolkit=<tooklit>]
   membrane.term screenshot --play=<path> [--width=<cols>] [--height=<rows>] \\
    [--color-scheme=<path>] [--font-family=<font>] [--font-size=<points>]\\
-   [--out=<file>] [--line-delay=<ms>] [--final-delay=<ms>]
+   [--out=<file>] [--line-delay=<ms>] [--final-delay=<ms>]  [--toolkit=<tooklit>]
   membrane.term --help
 
 Common Options:
@@ -21,6 +22,7 @@ Common Options:
       --color-scheme=<path>  Local path or url to iTerm .itermcolors scheme file, uses internal scheme by default.
       --font-family=<font>   Choose an OS installed font [default: monospace]
       --font-size=<points>   Specify the font point size [default: 12]
+      --toolkit=<toolkit>    Specify the toolkit [default: java2d]
 
 Screenshot Options:
   -p, --play=<path>          Path to script to play in terminal
@@ -62,10 +64,18 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
         p
         {:error "supported image formats are png, webp and jpeg (aka jpg)."}))))
 
+
+(defn parse-toolkit [v]
+  (try
+    (#'term/load-toolkit v)
+    (catch Throwable e
+      {:error (ex-message e)})))
+
 (defn- validate-font [args]
   (let [font-family (get args "--font-family")
-        font-size (get args "--font-size")]
-    (when-not (term/font-valid? font-family font-size)
+        font-size (get args "--font-size")
+        toolkit (get args "--toolkit")]
+    (when-not (term/font-valid? toolkit font-family font-size)
       {:error (format "font family %s, size %d not found" font-family font-size)})))
 
 (defn- validate-args [args args-def post-validations]
@@ -105,7 +115,8 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
                                                          "--line-delay" (int-parser-validator 0)
                                                          "--final-delay" (int-parser-validator 0)
                                                          "--font-family" parse-string
-                                                         "--font-size" (int-parser-validator 1)}
+                                                         "--font-size" (int-parser-validator 1)
+                                                         "--toolkit" parse-toolkit}
                                                 [validate-font])]
                      (if-let [error (:error arg-map)]
                        (do

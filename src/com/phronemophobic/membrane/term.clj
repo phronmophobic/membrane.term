@@ -4,7 +4,7 @@
             [clojure.string :as string]
             [com.phronemophobic.membrane.term.color-scheme :as color-scheme]
             [membrane.ui :as ui]
-            [membrane.java2d :as backend])
+            [membrane.toolkit :as tk])
   (:import [com.pty4j PtyProcess WinSize]))
 
 
@@ -314,42 +314,63 @@
           (prn e))))
     pty))
 
+(def valid-toolkits #{"java2d" "skia"})
+(defn- load-toolkit [toolkit]
+  (if (tk/toolkit? toolkit)
+    toolkit
+    (if-not (or (nil? toolkit)
+                (valid-toolkits toolkit))
+      (throw (ex-info (format "Invalid toolkit: %s. Valid toolkits are %s."
+                              toolkit
+                              (->> valid-toolkits
+                                   (map #(str "\"" % "\""))
+                                   (string/join ", ")))
+                      {}))
+      (case toolkit
+        (nil "java2d")
+        @(requiring-resolve 'membrane.java2d/toolkit)
+
+        ("skia")
+        @(requiring-resolve 'membrane.skia/toolkit)))))
+
 (defn- load-color-scheme [source]
   (if source
     (color-scheme/load-scheme source)
     default-color-scheme))
 
-(defn font-valid? [font-family font-size]
-  (or (= "monospace" font-family)
-      (skia/font-exists? (ui/font font-family font-size))))
+(defn font-valid? [toolkit font-family font-size]
+  (or (#{"monospace" "monospaced"} font-family)
+      (tk/font-exists? toolkit (ui/font font-family font-size))))
 
 (defn- load-terminal-font
   "No checking is done, but font is assumed to be monospaced with a constant advancement width."
-  [font-family font-size]
-  (if-not (font-valid? font-family font-size)
+  [toolkit font-family font-size]
+  (if-not (font-valid? toolkit font-family font-size)
     (throw (ex-info (format "Invalid font: family: %s, size %s" font-family font-size) {}))
     (let [term-font (ui/font font-family font-size)
-          metrics (skia/skia-font-metrics term-font)
-          baseline-offset (- (:Ascent metrics))
-          descent-offset (+ baseline-offset (:Descent metrics))]
+          metrics (tk/font-metrics toolkit term-font)
+          baseline-offset (- (:ascent metrics))
+          descent-offset (+ baseline-offset (:descent metrics))]
       (merge term-font
-             #:membrane.term {:cell-width (skia/skia-advance-x term-font " ")
-                              :cell-height (skia/skia-line-height term-font)
+             #:membrane.term {:cell-width (tk/font-advance-x toolkit term-font " ")
+                              :cell-height (tk/font-line-height toolkit term-font)
                               :descent-gap (- descent-offset baseline-offset)}))))
 
 (defn run-term
   ([]
    (run-term {}))
-  ([{:keys [width height color-scheme font-family font-size]
+  ([{:keys [width height color-scheme font-family font-size toolkit]
      :as _opts
      :or {width 90
           height 30}}]
    (let [term-state (atom {:vt (vt/make-vt width height)})
+         toolkit (load-toolkit toolkit)
          color-scheme (load-color-scheme color-scheme)
-         font (load-terminal-font font-family font-size)]
+         font (load-terminal-font toolkit font-family font-size)]
      (swap! term-state assoc
             :pty (run-pty-process width height term-state))
-     (backend/run-sync
+     (tk/run-sync
+      toolkit
       (fn []
         (let [{:keys [pty vt]} @term-state]
           (term-events pty
@@ -367,7 +388,7 @@
     (save-image!* fname out)))
 
 (defn screenshot
-  ([{:keys [play width height out line-delay final-delay color-scheme font-family font-size]
+  ([{:keys [play width height out line-delay final-delay color-scheme font-family font-size toolkit]
      :as _opts
      :or {width 90
           height 30
@@ -375,8 +396,9 @@
           final-delay 10e3
           out "terminal.png"}}]
    (let [term-state (atom {:vt (vt/make-vt width height)})
+         toolkit (load-toolkit toolkit)
          color-scheme (load-color-scheme color-scheme)
-         font (load-terminal-font font-family font-size)]
+         font (load-terminal-font toolkit font-family font-size)]
      (swap! term-state assoc
             :pty (run-pty-process width height term-state))
      (doseq [line (string/split-lines (slurp play))]
@@ -385,9 +407,10 @@
        (Thread/sleep line-delay))
 
      (Thread/sleep final-delay)
-     (skia/draw-to-image! out
-                          (ui/fill-bordered (:background color-scheme) 5
-                                            (term-view color-scheme font (:vt @term-state))))
+     (tk/save-image toolkit
+                    out
+                    (ui/fill-bordered (:background color-scheme) 5
+                                      (term-view color-scheme font (:vt @term-state))))
      (println (str "Wrote screenshot to " out "."))
 
      (let [^PtyProcess pty (:pty @term-state)]
