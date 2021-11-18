@@ -2,7 +2,6 @@
   (:require [asciinema.vt :as vt]
             [clojure.java.io :as io]
             [clojure.string :as string]
-            [com.phronemophobic.membrane.term.color-scheme :as color-scheme]
             [membrane.ui :as ui]
             [membrane.skia :as skia])
   (:import [com.pty4j PtyProcess WinSize]))
@@ -18,28 +17,6 @@
 (def blank-cell [32 {}])
 (defn blank-cell? [cell]
   (= cell blank-cell))
-
-(def default-color-scheme
-  {:white           [1     1     1]
-   :black           [0     0     0]
-   :red             [0.76  0.21  0.13]
-   :green           [0.14  0.74  0.14]
-   :yellow          [0.68  0.68  0.15]
-   :blue            [0.29  0.18  0.88]
-   :magenta         [0.83  0.22  0.83]
-   :cyan            [0.20  0.73  0.78]
-   :bright-black    [0.46  0.46  0.46]
-   :bright-red      [0.91  0.28  0.34]
-   :bright-green    [0.09  0.78  0.05]
-   :bright-yellow   [0.98  0.95  0.65]
-   :bright-blue     [0.23  0.47  1]
-   :bright-magenta  [0.71  0     0.62]
-   :bright-cyan     [0.38  0.84  0.84]
-   :bright-white    [0.95  0.95  0.95]
-   :cursor          [0.57  0.57  0.57]
-   :cursor-text     [0     0     0]
-   :background      [1     1     1]
-   :foreground      [0     0     0]})
 
 (defn vt-color->term-color
   [color-scheme vt-color]
@@ -315,11 +292,6 @@
           (prn e))))
     pty))
 
-(defn- load-color-scheme [source]
-  (if source
-    (color-scheme/load-scheme source)
-    default-color-scheme))
-
 (defn font-valid? [font-family font-size]
   (or (= "monospace" font-family)
       (skia/font-exists? (ui/font font-family font-size))))
@@ -338,10 +310,35 @@
                               :cell-height (skia/skia-line-height term-font)
                               :descent-gap (- descent-offset baseline-offset)}))))
 
+(def default-color-scheme
+  "Colors are specified a per membrane convention:
+   vectors of [red green blue] or [red green blue alpha] with values from 0 - 1 inclusive"
+  {:white           [1     1     1]
+   :black           [0     0     0]
+   :red             [0.76  0.21  0.13]
+   :green           [0.14  0.74  0.14]
+   :yellow          [0.68  0.68  0.15]
+   :blue            [0.29  0.18  0.88]
+   :magenta         [0.83  0.22  0.83]
+   :cyan            [0.20  0.73  0.78]
+   :bright-black    [0.46  0.46  0.46]
+   :bright-red      [0.91  0.28  0.34]
+   :bright-green    [0.09  0.78  0.05]
+   :bright-yellow   [0.98  0.95  0.65]
+   :bright-blue     [0.23  0.47  1]
+   :bright-magenta  [0.71  0     0.62]
+   :bright-cyan     [0.38  0.84  0.84]
+   :bright-white    [0.95  0.95  0.95]
+   :cursor          [0.57  0.57  0.57]
+   :cursor-text     [0     0     0]
+   :background      [1     1     1]
+   :foreground      [0     0     0]})
+
 (def default-common-opts {:width 90
                           :height 30
                           :font-family "monospace"
-                          :font-size 12})
+                          :font-size 12
+                          :color-scheme default-color-scheme})
 
 (defn run-term
   ([]
@@ -350,7 +347,6 @@
    (let [opts (merge default-common-opts opts)
          {:keys [width height color-scheme font-family font-size]} opts
          term-state (atom {:vt (vt/make-vt width height)})
-         color-scheme (load-color-scheme color-scheme)
          font (load-terminal-font font-family font-size)]
         (swap! term-state assoc
                :pty (run-pty-process width height term-state))
@@ -375,7 +371,6 @@
                      opts)
          {:keys [play width height out line-delay final-delay color-scheme font-family font-size]} opts
          term-state (atom {:vt (vt/make-vt width height)})
-         color-scheme (load-color-scheme color-scheme)
          font (load-terminal-font font-family font-size)]
      (swap! term-state assoc
             :pty (run-pty-process width height term-state))
