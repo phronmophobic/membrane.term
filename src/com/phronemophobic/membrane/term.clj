@@ -338,39 +338,43 @@
                               :cell-height (skia/skia-line-height term-font)
                               :descent-gap (- descent-offset baseline-offset)}))))
 
+(def default-common-opts {:width 90
+                          :height 30
+                          :font-family "monospace"
+                          :font-size 12})
+
 (defn run-term
   ([]
    (run-term {}))
-  ([{:keys [width height color-scheme font-family font-size]
-     :as _opts
-     :or {width 90
-          height 30}}]
-   (let [term-state (atom {:vt (vt/make-vt width height)})
+  ([opts]
+   (let [opts (merge default-common-opts opts)
+         {:keys [width height color-scheme font-family font-size]} opts
+         term-state (atom {:vt (vt/make-vt width height)})
          color-scheme (load-color-scheme color-scheme)
          font (load-terminal-font font-family font-size)]
-     (swap! term-state assoc
-            :pty (run-pty-process width height term-state))
-     (skia/run-sync
-      (fn []
-        (let [{:keys [pty vt]} @term-state]
-          (term-events pty
-                       (term-view color-scheme font vt))))
-      {:window-start-width (* width (:membrane.term/cell-width font))
-       :window-start-height (+ window-padding-height (* height (:membrane.term/cell-height font)))})
+        (swap! term-state assoc
+               :pty (run-pty-process width height term-state))
+        (skia/run-sync
+         (fn []
+           (let [{:keys [pty vt]} @term-state]
+             (term-events pty
+                          (term-view color-scheme font vt))))
+         {:window-start-width (* width (:membrane.term/cell-width font))
+          :window-start-height (+ window-padding-height (* height (:membrane.term/cell-height font)))})
 
-     (let [^PtyProcess pty (:pty @term-state)]
-       (.close (.getInputStream pty))
-       (.close (.getOutputStream pty))))))
+        (let [^PtyProcess pty (:pty @term-state)]
+          (.close (.getInputStream pty))
+          (.close (.getOutputStream pty))))))
 
 (defn screenshot
-  ([{:keys [play width height out line-delay final-delay color-scheme font-family font-size]
-     :as _opts
-     :or {width 90
-          height 30
-          line-delay 1e3
-          final-delay 10e3
-          out "terminal.png"}}]
-   (let [term-state (atom {:vt (vt/make-vt width height)})
+  ([opts]
+   (let [opts (merge default-common-opts
+                     {:line-delay 1e3
+                      :final-delay 10e3
+                      :out "terminal.png"}
+                     opts)
+         {:keys [play width height out line-delay final-delay color-scheme font-family font-size]} opts
+         term-state (atom {:vt (vt/make-vt width height)})
          color-scheme (load-color-scheme color-scheme)
          font (load-terminal-font font-family font-size)]
      (swap! term-state assoc
