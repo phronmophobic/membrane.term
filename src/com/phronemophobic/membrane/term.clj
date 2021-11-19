@@ -370,11 +370,6 @@
           (.close (.getInputStream pty))
           (.close (.getOutputStream pty))))))
 
-(let [save-image!* (or (resolve 'backend/save-to-image!)
-                       (resolve 'backend/draw-to-image!))]
-  (defn- save-image! [fname out]
-    (save-image!* fname out)))
-
 (defn screenshot
   ([opts]
    (let [opts (merge default-common-opts
