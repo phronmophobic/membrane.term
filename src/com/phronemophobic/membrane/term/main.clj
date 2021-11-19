@@ -4,6 +4,7 @@
             [com.phronemophobic.membrane.term :as term]
             [membrane.ui :as ui]
             [membrane.toolkit :as tk]
+            [com.phronemophobic.membrane.term.color-scheme :as color-scheme]
             [docopt.core :as docopt]))
 
 (def docopt-usage
@@ -11,10 +12,10 @@
 
 Usage:
   membrane.term run-term [--width=<cols>] [--height=<rows>] \\
-   [--color-scheme=<path>] [--font-family=<font>] [--font-size=<points>] [--toolkit=<tooklit>]
+   [--color-scheme=<path>] [--font-family=<font>] [--font-size=<points>] [--toolkit=<toolkit>]
   membrane.term screenshot --play=<path> [--width=<cols>] [--height=<rows>] \\
    [--color-scheme=<path>] [--font-family=<font>] [--font-size=<points>]\\
-   [--out=<file>] [--line-delay=<ms>] [--final-delay=<ms>]  [--toolkit=<tooklit>]
+   [--out=<file>] [--line-delay=<ms>] [--final-delay=<ms>]  [--toolkit=<toolkit>]
   membrane.term --help
 
 Common Options:
@@ -63,6 +64,17 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
         (catch Throwable e
           {:error (format "unable to open path, %s" (ex-message e))})))))
 
+(defn- parse-color-scheme [v]
+  (when v
+    (let [p (parse-existing-path v)]
+      (if (:error p)
+        p
+        (try
+          (color-scheme/load-scheme p)
+          (catch Throwable e
+            {:error (format "Unable to load color-scheme from %s" p)
+             :exception e}))))))
+
 (defn- parse-image-out [v]
   (when v
     (let [p (str v)]
@@ -109,7 +121,7 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
                                  (let [od (get args-def k)
                                        v ((or od identity) v)]
                                    (if (:error v)
-                                     (reduced {:error (format "%s: %s" k (:error v))})
+                                     (reduced (assoc v :error (format "%s: %s" k (:error v))))
                                      (assoc m k v))))
                                {}
                                args)]
@@ -120,10 +132,12 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
         parsed-args))))
 
 (defn- keywordize [arg-map]
-  (into {}
-        (map (fn [[k v]]
-               [(keyword (string/replace-first k #"^--" "")) v])
-             arg-map)))
+  (reduce-kv (fn [m k v]
+               (if v
+                 (assoc m (keyword (string/replace-first k #"^--" "")) v)
+                 m))
+             {}
+             arg-map))
 
 (defn- undo-line-continuations
   "Docopt does not seem to support line continuations, but I feel they make the usage help readable."
@@ -136,7 +150,7 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
                    (let [arg-map (validate-args arg-map {"--width" (int-parser-validator 1)
                                                          "--height" (int-parser-validator 1)
                                                          "--play" parse-existing-path
-                                                         "--color-scheme" parse-existing-path
+                                                         "--color-scheme" parse-color-scheme
                                                          "--out" parse-image-out
                                                          "--line-delay" (int-parser-validator 0)
                                                          "--final-delay" (int-parser-validator 0)
@@ -146,8 +160,10 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
                                                 [validate-font])]
                      (if-let [error (:error arg-map)]
                        (do
-                         (println (format "*\n* Error: %s\n*\n" error))
-                         (println docopt-usage)
+                         (println (format "*\n* Error: %s\n*" error))
+                         (when-let [e (:exception arg-map)]
+                           (println (format "* Exception: %s\n*" (ex-message e))))
+                         (println (str "\n" docopt-usage))
                          (System/exit 1))
                        (let [opts (keywordize arg-map)
                              opts (update opts :font-family
