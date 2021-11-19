@@ -56,6 +56,7 @@ You can also optional specify:
 - [`--color-scheme`](#color-schemes) choose a different color scheme
 - [`--font-family`](#fonts) choose an OS installed font (default: monospace)
 - [`--font-size`](#fonts) specify font point size (default: 12)
+- [`--toolkit`](#toolkits) specify the toolkit (default: java2d)
 
 ### Run a headless terminal and take a screenshot
 
