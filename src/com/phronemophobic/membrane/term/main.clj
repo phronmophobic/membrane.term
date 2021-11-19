@@ -2,6 +2,7 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as string]
             [com.phronemophobic.membrane.term :as term]
+            [membrane.ui :as ui]
             [membrane.toolkit :as tk]
             [docopt.core :as docopt]))
 
@@ -38,6 +39,11 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
 (defn- parse-string [v]
   (str v))
 
+(defn parse-font-family [v]
+  (if (= "monospace" v)
+    :monospace
+    (str v)))
+
 (defn- int-parser-validator [min]
   (fn [v]
     (let [num (if (integer? v)
@@ -65,17 +71,37 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
         {:error "supported image formats are png, webp and jpeg (aka jpg)."}))))
 
 
+(def valid-toolkits #{"java2d" "skia"})
+(defn- load-toolkit [toolkit]
+  (if-not (or (nil? toolkit)
+              (valid-toolkits toolkit))
+    (throw (ex-info (format "Invalid toolkit: %s. Valid toolkits are %s."
+                            toolkit
+                            (->> valid-toolkits
+                                 (map #(str "\"" % "\""))
+                                 (string/join ", ")))
+                    {}))
+    (case toolkit
+      (nil "java2d")
+      @(requiring-resolve 'membrane.java2d/toolkit)
+
+      ("skia")
+      @(requiring-resolve 'membrane.skia/toolkit))))
+
 (defn parse-toolkit [v]
   (try
-    (#'term/load-toolkit v)
+    (load-toolkit v)
     (catch Throwable e
       {:error (ex-message e)})))
 
 (defn- validate-font [args]
   (let [font-family (get args "--font-family")
         font-size (get args "--font-size")
-        toolkit (get args "--toolkit")]
-    (when-not (term/font-valid? toolkit font-family font-size)
+        toolkit (get args "--toolkit")
+        font-family (if (keyword? font-family)
+                      (tk/logical-font->font-family toolkit :monospace)
+                      font-family)]
+    (when-not (tk/font-exists? toolkit (ui/font font-family font-size))
       {:error (format "font family %s, size %d not found" font-family font-size)})))
 
 (defn- validate-args [args args-def post-validations]
@@ -114,7 +140,7 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
                                                          "--out" parse-image-out
                                                          "--line-delay" (int-parser-validator 0)
                                                          "--final-delay" (int-parser-validator 0)
-                                                         "--font-family" parse-string
+                                                         "--font-family" parse-font-family
                                                          "--font-size" (int-parser-validator 1)
                                                          "--toolkit" parse-toolkit}
                                                 [validate-font])]
@@ -123,7 +149,12 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
                          (println (format "*\n* Error: %s\n*\n" error))
                          (println docopt-usage)
                          (System/exit 1))
-                       (let [opts (keywordize arg-map)]
+                       (let [opts (keywordize arg-map)
+                             opts (update opts :font-family
+                                          (fn [font-family]
+                                            (if (keyword? font-family)
+                                              (tk/logical-font->font-family (:toolkit opts) font-family)
+                                              font-family)))]
                          (cond
                            (:help opts) (println docopt-usage)
                            (:run-term opts) (term/run-term opts)

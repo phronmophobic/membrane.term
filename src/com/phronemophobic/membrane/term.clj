@@ -314,47 +314,28 @@
           (prn e))))
     pty))
 
-(def valid-toolkits #{"java2d" "skia"})
-(defn- load-toolkit [toolkit]
-  (if (tk/toolkit? toolkit)
-    toolkit
-    (if-not (or (nil? toolkit)
-                (valid-toolkits toolkit))
-      (throw (ex-info (format "Invalid toolkit: %s. Valid toolkits are %s."
-                              toolkit
-                              (->> valid-toolkits
-                                   (map #(str "\"" % "\""))
-                                   (string/join ", ")))
-                      {}))
-      (case toolkit
-        (nil "java2d")
-        @(requiring-resolve 'membrane.java2d/toolkit)
-
-        ("skia")
-        @(requiring-resolve 'membrane.skia/toolkit)))))
 
 (defn- load-color-scheme [source]
   (if source
     (color-scheme/load-scheme source)
     default-color-scheme))
 
-(defn font-valid? [toolkit font-family font-size]
-  (or (#{"monospace" "monospaced"} font-family)
-      (tk/font-exists? toolkit (ui/font font-family font-size))))
-
 (defn- load-terminal-font
   "No checking is done, but font is assumed to be monospaced with a constant advancement width."
   [toolkit font-family font-size]
-  (if-not (font-valid? toolkit font-family font-size)
-    (throw (ex-info (format "Invalid font: family: %s, size %s" font-family font-size) {}))
-    (let [term-font (ui/font font-family font-size)
-          metrics (tk/font-metrics toolkit term-font)
-          baseline-offset (- (:ascent metrics))
-          descent-offset (+ baseline-offset (:descent metrics))]
-      (merge term-font
-             #:membrane.term {:cell-width (tk/font-advance-x toolkit term-font " ")
-                              :cell-height (tk/font-line-height toolkit term-font)
-                              :descent-gap (- descent-offset baseline-offset)}))))
+  (let [term-font (ui/font font-family font-size)]
+    (if-not (tk/font-exists? toolkit term-font)
+      (throw (ex-info (format "Invalid font: family: %s, size %s" font-family font-size) {}))
+      (let [metrics (tk/font-metrics toolkit term-font)
+            baseline-offset (- (:ascent metrics))
+            descent-offset (+ baseline-offset (:descent metrics))]
+        (merge term-font
+               #:membrane.term {:cell-width (tk/font-advance-x toolkit term-font " ")
+                                :cell-height (tk/font-line-height toolkit term-font)
+                                :descent-gap (- descent-offset baseline-offset)})))))
+
+(defn load-default-toolkit []
+  @(requiring-resolve 'membrane.java2d/toolkit))
 
 (defn run-term
   ([]
@@ -364,7 +345,9 @@
      :or {width 90
           height 30}}]
    (let [term-state (atom {:vt (vt/make-vt width height)})
-         toolkit (load-toolkit toolkit)
+         toolkit (if toolkit
+                   toolkit
+                   (load-default-toolkit))
          color-scheme (load-color-scheme color-scheme)
          font (load-terminal-font toolkit font-family font-size)]
      (swap! term-state assoc
@@ -396,7 +379,9 @@
           final-delay 10e3
           out "terminal.png"}}]
    (let [term-state (atom {:vt (vt/make-vt width height)})
-         toolkit (load-toolkit toolkit)
+         toolkit (if toolkit
+                   toolkit
+                   (load-default-toolkit))
          color-scheme (load-color-scheme color-scheme)
          font (load-terminal-font toolkit font-family font-size)]
      (swap! term-state assoc
