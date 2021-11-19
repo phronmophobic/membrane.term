@@ -174,7 +174,11 @@ produces `terminal.png`:
 
 You can specify a toolkit. Available options are "java2d" (the default) and "skia".
 
+### Java2d
+
 The java2d toolkit will use swing for windowing, graphics, and events.
+
+### Skia
 
 The skia toolkit will use [skia](https://skia.org/) for graphics and [glfw](https://www.glfw.org/) for windowing and events. Using the skia toolkit requires the following extra dependency:
 
