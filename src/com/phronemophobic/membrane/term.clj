@@ -296,7 +296,10 @@
 (defn- load-terminal-font
   "No checking is done, but font is assumed to be monospaced with a constant advancement width."
   [toolkit font-family font-size]
-  (let [term-font (ui/font font-family font-size)]
+  (let [font-family (if (keyword? font-family)
+                      (tk/logical-font->font-family toolkit font-family)
+                      font-family)
+        term-font (ui/font font-family font-size)]
     (if-not (tk/font-exists? toolkit term-font)
       (throw (ex-info (format "Invalid font: family: %s, size %s" font-family font-size) {}))
       (let [metrics (tk/font-metrics toolkit term-font)
@@ -336,7 +339,7 @@
 
 (def default-common-opts {:width 90
                           :height 30
-                          :font-family "monospace"
+                          :font-family :monospace
                           :font-size 12
                           :toolkit nil
                           :color-scheme default-color-scheme})
