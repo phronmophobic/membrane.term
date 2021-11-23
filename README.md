@@ -89,11 +89,11 @@ You can also optionally specify:
 - `-w, --width` width of the terminal window in character columns (default: 90)
 - `-h, --height` height of the terminal window in character columns (default: 30)
 - `-o, --out` filename of the image file to generate (default: terminal.png)\
+Image format determined by filename extension, supported extensions are `.png`, `.webp`, `.jpeg` and `.jpg`.
 - [`--color-scheme`](#color-schemes) choose a different color scheme
 - [`--font-family`](#fonts) choose an OS installed font (default: monospace)
 - [`--font-size`](#fonts) specify font point size (default: 12)
 - [`--toolkit`](#toolkits) specify the toolkit (default: java2d)
-Image format determined by filename extension, supported extensions are `.png`, `.webp`, `.jpeg` and `.jpg`.
 - `--line-delay` if your play script runs a command like `lein repl`, the underlying program might not be ready to accept input immediately.\
 You can specify a delay in ms to wait after each line is played to the terminal (default: 1000)
 - `--final-delay` after the last line of your play script is run, you might need to wait for it to generate all of its output.\
