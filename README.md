@@ -197,7 +197,11 @@ Linux
 com.phronemophobic.membrane/skialib-linux-x86-64 {:mvn/version "0.9.31.0-beta"}
 ```
 
-If running from the skia project, you can use the `:skia` alias to add the dependency.
+If running from the `membrane.term` project, you can use the `:skia` alias to add the dependency:
+
+```bash
+clojure -M:membrane.term:skia run-term --toolkit skia
+```
 
 ## Discuss
 
