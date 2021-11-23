@@ -366,7 +366,8 @@
            (let [{:keys [pty vt]} @term-state]
              (term-events pty
                           (term-view color-scheme font vt))))
-         {:window-start-width (* width (:membrane.term/cell-width font))
+         {:window-title "membrane.term"
+          :window-start-width (* width (:membrane.term/cell-width font))
           :window-start-height (+ window-padding-height (* height (:membrane.term/cell-height font)))})
 
         (let [^PtyProcess pty (:pty @term-state)]
