@@ -195,6 +195,9 @@
 
        (when (#{:press :repeat} action)
          (case (int key)
+           ;; Note: glfw and swing send different values for some keys.
+           ;; Usually, the lower value is from swing.
+
            ;; backspace
            (8 259) (writec-bytes out [0x7f])
 
