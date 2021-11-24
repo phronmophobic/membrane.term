@@ -3,7 +3,7 @@
             [clojure.java.io :as io]
             [clojure.string :as string]
             [membrane.ui :as ui]
-            [membrane.skia :as skia])
+            [membrane.toolkit :as tk])
   (:import [com.pty4j PtyProcess WinSize]))
 
 
@@ -195,27 +195,30 @@
 
        (when (#{:press :repeat} action)
          (case (int key)
+           ;; Note: glfw and swing send different values for some keys.
+           ;; Usually, the lower value is from swing.
+
            ;; backspace
-           259 (writec-bytes out [0x7f])
+           (8 259) (writec-bytes out [0x7f])
 
            ;; escape
-           256 (writec-bytes out [0x1b])
+           (27 256) (writec-bytes out [0x1b])
 
            ;; tab
-           258 (writec-bytes out [(int \tab)])
+           (9 258) (writec-bytes out [(int \tab)])
 
 
-           262 ;; right
+           (39 262) ;; right
            (writec-bytes out (map int [033 \[ \C]))
 
-           #_left 263
+           #_left (37 263)
            (writec-bytes out (map int [033 \[ \D]))
 
-           264 (writec-bytes out (map int [033 \[ \B]))
+           (40 264) (writec-bytes out (map int [033 \[ \B]))
            ;; down
 
            ;; up
-           265
+           (38 265)
            (writec-bytes out (map int [0x1b \[ \A]))
 
            ;; default
@@ -223,40 +226,39 @@
            )
 
 
-         (when (not (zero? (bit-and skia/GLFW_MOD_CONTROL mods)))
-           (when (< key 128)
-             (case (char key)
-               (\A \B \C \D \E \F \G \H \I \J \K \L \M \N \O \P \Q \R \S \T \U \V \W \X \Y \Z)
-               (let [b (inc (- key (int \A) ))]
-                 (writec-bytes out [b]))
+         (when (not (zero? (bit-and ui/CONTROL-MASK mods)))
+           (case (char key)
+             (\A \B \C \D \E \F \G \H \I \J \K \L \M \N \O \P \Q \R \S \T \U \V \W \X \Y \Z)
+             (let [b (inc (- key (int \A) ))]
+               (writec-bytes out [b]))
 
-               \space
-               (let [b (inc (- (int (char \@)) (int \A) ))]
-                 (writec-bytes out [b]))
+             \space
+             (let [b (inc (- (int (char \@)) (int \A) ))]
+               (writec-bytes out [b]))
 
-               \-
-               (let [b (inc (- (int \_) (int \A)))]
-                 (writec-bytes out [b]))
+             \-
+             (let [b (inc (- (int \_) (int \A)))]
+               (writec-bytes out [b]))
 
-               nil)))
+             nil))
 
-         (when (not (zero? (bit-and skia/GLFW_MOD_ALT mods)))
-           (when (< key 128)
-             (case (char key)
+         (when (or (not (zero? (bit-and ui/ALT-MASK mods)))
+                   (not (zero? (bit-and ui/SUPER-MASK mods))))
+           (case (char key)
 
-               (\A \B \C \D \E \F \G \H \I \J \K \L \M \N \O \P \Q \R \S \T \U \V \W \X \Y \Z)
-               (let [key (if (zero? (bit-and skia/GLFW_MOD_SHIFT mods))
-                           (- key (- (int \A) (int \a)))
-                           key)]
-                 (writec-bytes out [0x1b key]))
+             (\A \B \C \D \E \F \G \H \I \J \K \L \M \N \O \P \Q \R \S \T \U \V \W \X \Y \Z)
+             (let [key (if (zero? (bit-and ui/SHIFT-MASK mods))
+                         (- key (- (int \A) (int \a)))
+                         key)]
+               (writec-bytes out [0x1b key]))
 
-               ;; else
-               (let [key (if (not (zero? (bit-and skia/GLFW_MOD_SHIFT mods)))
-                           (when-let [c (get meta-shift-map (char key))]
-                             (int c))
-                           key)]
-                 (when key
-                   (writec-bytes out [0x1b key])))))))
+             ;; else
+             (let [key (if (not (zero? (bit-and ui/SHIFT-MASK mods)))
+                         (when-let [c (get meta-shift-map (char key))]
+                           (int c))
+                         key)]
+               (when key
+                 (writec-bytes out [0x1b key]))))))
        nil
        )
      :key-press
@@ -292,23 +294,27 @@
           (prn e))))
     pty))
 
-(defn font-valid? [font-family font-size]
-  (or (= "monospace" font-family)
-      (skia/font-exists? (ui/font font-family font-size))))
+
 
 (defn- load-terminal-font
   "No checking is done, but font is assumed to be monospaced with a constant advancement width."
-  [font-family font-size]
-  (if-not (font-valid? font-family font-size)
-    (throw (ex-info (format "Invalid font: family: %s, size %s" font-family font-size) {}))
-    (let [term-font (ui/font font-family font-size)
-          metrics (skia/skia-font-metrics term-font)
-          baseline-offset (- (:Ascent metrics))
-          descent-offset (+ baseline-offset (:Descent metrics))]
-      (merge term-font
-             #:membrane.term {:cell-width (skia/skia-advance-x term-font " ")
-                              :cell-height (skia/skia-line-height term-font)
-                              :descent-gap (- descent-offset baseline-offset)}))))
+  [toolkit font-family font-size]
+  (let [font-family (if (keyword? font-family)
+                      (tk/logical-font->font-family toolkit font-family)
+                      font-family)
+        term-font (ui/font font-family font-size)]
+    (if-not (tk/font-exists? toolkit term-font)
+      (throw (ex-info (format "Invalid font: family: %s, size %s" font-family font-size) {}))
+      (let [metrics (tk/font-metrics toolkit term-font)
+            baseline-offset (- (:ascent metrics))
+            descent-offset (+ baseline-offset (:descent metrics))]
+        (merge term-font
+               #:membrane.term {:cell-width (tk/font-advance-x toolkit term-font " ")
+                                :cell-height (tk/font-line-height toolkit term-font)
+                                :descent-gap (- descent-offset baseline-offset)})))))
+
+(defn load-default-toolkit []
+  @(requiring-resolve 'membrane.java2d/toolkit))
 
 (def default-color-scheme
   "Colors are specified a per membrane convention:
@@ -336,8 +342,9 @@
 
 (def default-common-opts {:width 90
                           :height 30
-                          :font-family "monospace"
+                          :font-family :monospace
                           :font-size 12
+                          :toolkit nil
                           :color-scheme default-color-scheme})
 
 (defn run-term
@@ -345,17 +352,22 @@
    (run-term {}))
   ([opts]
    (let [opts (merge default-common-opts opts)
-         {:keys [width height color-scheme font-family font-size]} opts
+         {:keys [width height color-scheme font-family font-size toolkit]} opts
          term-state (atom {:vt (vt/make-vt width height)})
-         font (load-terminal-font font-family font-size)]
+         toolkit (if toolkit
+                   toolkit
+                   (load-default-toolkit))
+         font (load-terminal-font toolkit font-family font-size)]
         (swap! term-state assoc
                :pty (run-pty-process width height term-state))
-        (skia/run-sync
+        (tk/run-sync
+         toolkit
          (fn []
            (let [{:keys [pty vt]} @term-state]
              (term-events pty
                           (term-view color-scheme font vt))))
-         {:window-start-width (* width (:membrane.term/cell-width font))
+         {:window-title "membrane.term"
+          :window-start-width (* width (:membrane.term/cell-width font))
           :window-start-height (+ window-padding-height (* height (:membrane.term/cell-height font)))})
 
         (let [^PtyProcess pty (:pty @term-state)]
@@ -369,9 +381,12 @@
                       :final-delay 10e3
                       :out "terminal.png"}
                      opts)
-         {:keys [play width height out line-delay final-delay color-scheme font-family font-size]} opts
+         {:keys [play width height out line-delay final-delay color-scheme font-family font-size toolkit]} opts
          term-state (atom {:vt (vt/make-vt width height)})
-         font (load-terminal-font font-family font-size)]
+         toolkit (if toolkit
+                   toolkit
+                   (load-default-toolkit))
+         font (load-terminal-font toolkit font-family font-size)]
      (swap! term-state assoc
             :pty (run-pty-process width height term-state))
      (doseq [line (string/split-lines (slurp play))]
@@ -380,9 +395,10 @@
        (Thread/sleep line-delay))
 
      (Thread/sleep final-delay)
-     (skia/draw-to-image! out
-                          (ui/fill-bordered (:background color-scheme) 5
-                                            (term-view color-scheme font (:vt @term-state))))
+     (tk/save-image toolkit
+                    out
+                    (ui/fill-bordered (:background color-scheme) 5
+                                      (term-view color-scheme font (:vt @term-state))))
      (println (str "Wrote screenshot to " out "."))
 
      (let [^PtyProcess pty (:pty @term-state)]

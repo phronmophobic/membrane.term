@@ -3,19 +3,12 @@
         org.clojure/data.xml {:mvn/version "0.2.0-alpha6"}
         org.clojure/data.zip {:mvn/version "1.0.0"}
         dev.nubank/docopt {:mvn/version "0.6.1-fix7"}
-        com.phronemophobic/membrane {:mvn/version "0.9.31.0-beta"
+        com.phronemophobic/membrane {:mvn/version "0.9.31.6-beta"
                                      ;; :local/root "../membrane2"
+
+                                     ;; :git/sha "e53dafa68d2f336519e35dc44a60aede370b8f35"
+                                     ;; :git/url "https://github.com/phronmophobic/membrane"
                                      }
-        com.phronemophobic.membrane/skialib-macosx-aarch64
-        {:mvn/version "0.9.31.0-beta"
-         ;;:local/root "../membrane2/csource/macos-aarch64"
-         }
-
-        com.phronemophobic.membrane/skialib-macosx-x86-64
-        {:mvn/version "0.9.31.0-beta"}
-
-        com.phronemophobic.membrane/skialib-linux-x86-64
-        {:mvn/version "0.9.31.0-beta"}
 
         asciinema/vt
         #_{:local/root "../vt"}
@@ -29,7 +22,20 @@
  {"jetbrains-intellij-dependencies" {:url "https://packages.jetbrains.team/maven/p/ij/intellij-dependencies"}}
  :aliases
 
- {:membrane.term ;; to simulate a user installation
+ {:skia
+  {:extra-deps {com.phronemophobic.membrane/skialib-macosx-aarch64
+                {:mvn/version "0.9.31.0-beta"
+                 ;;:local/root "../membrane2/csource/macos-aarch64"
+                 }
+
+                com.phronemophobic.membrane/skialib-macosx-x86-64
+                {:mvn/version "0.9.31.0-beta"}
+
+                com.phronemophobic.membrane/skialib-linux-x86-64
+                {:mvn/version "0.9.31.0-beta"}}}
+
+
+  :membrane.term ;; to simulate a user installation
   {:extra-deps {org.slf4j/log4j-over-slf4j {:mvn/version "1.7.32"}
                 org.slf4j/slf4j-nop {:mvn/version "1.7.32"}}
    :main-opts ["-m" "com.phronemophobic.membrane.term.main"]}
