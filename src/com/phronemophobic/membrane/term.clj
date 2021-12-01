@@ -348,6 +348,26 @@
                           :color-scheme default-color-scheme})
 
 (defn run-term
+  "Launch an interactive membrane.term terminal. Terminal exits when explicitly closed by user.
+
+  Accepts optional `opts` map:
+  - `:width`         Window width in characters (default: `90`)
+  - `:height`        Window height in characters (default: `30`)
+  - `:font-family`   OS installed font family name. Example: `\"Courier New\"`.
+     Use `:monospace` for default monospace (default: `:monospace`)
+  - `:font-size`     Font point size (default: `12`)
+  - `:toolkit`       Graphics toolkit, specify `\"java2d\"` or `\"skia\"` (default: `\"java2d\"`)
+  - `:color-scheme`  Map for terminal colors (defaults to an internal scheme)
+     Colors are specified per membrane convention, vectors of `[red green blue]` or
+     `[red green blue alpha]` with values from `0` - `1` inclusive. Example: `[0.14  0.74  0.14 0.50]`.
+     A color value must be specified for all of:
+     - ANSI colors
+       - `:white` `:black` `:red` `:green` `:yellow` `:blue` `:magenta` `cyan`
+       - `:bright-white` `:bright-black` `:bright-red` `:bright-green` `:bright-yellow` `:bright-blue` `:bright-magenta` `:bright-cyan`
+     - `:cursor` - Background color for cursor
+     - `:cursor-text` - Foreground color for cursor text
+     - `:background` - Default background color
+     - `:foreground` - Default text color"
   ([]
    (run-term {}))
   ([opts]
@@ -374,33 +394,42 @@
           (.close (.getInputStream pty))
           (.close (.getOutputStream pty))))))
 
+
 (defn screenshot
-  ([opts]
-   (let [opts (merge default-common-opts
-                     {:line-delay 1e3
-                      :final-delay 10e3
-                      :out "terminal.png"}
-                     opts)
-         {:keys [play width height out line-delay final-delay color-scheme font-family font-size toolkit]} opts
-         term-state (atom {:vt (vt/make-vt width height)})
-         toolkit (if toolkit
-                   toolkit
-                   (load-default-toolkit))
-         font (load-terminal-font toolkit font-family font-size)]
-     (swap! term-state assoc
-            :pty (run-pty-process width height term-state))
-     (doseq [line (string/split-lines (slurp play))]
-       (send-input (:pty @term-state) line)
-       (send-input (:pty @term-state) "\n")
-       (Thread/sleep line-delay))
+  "Take a screenshot after playing a script line by line in a membrane.term terminal.
+  Terminal is not displayed and automatically exits after screenshot is written.
 
-     (Thread/sleep final-delay)
-     (tk/save-image toolkit
-                    out
-                    (ui/fill-bordered (:background color-scheme) 5
-                                      (term-view color-scheme font (:vt @term-state))))
-     (println (str "Wrote screenshot to " out "."))
+  Requires `opts` map which accepts all options documented in [[run-term]] and:
+  - `:play`        Path to script to play in terminal (**required**)
+  - `:out`         Filename for screenshot image (default: `\"terminal.png\"`)
+  - `:line-delay`  Delay in milliseconds to wait after each line in `:play` script is sent to terminal (default: `1000`)
+  - `:final-delay` Delay in milliseconds to wait after all lines in `:play` script are sent to terminal (default: `10000`)"
+  [opts]
+  (let [opts (merge default-common-opts
+                    {:line-delay 1e3
+                     :final-delay 10e3
+                     :out "terminal.png"}
+                    opts)
+        {:keys [play width height out line-delay final-delay color-scheme font-family font-size toolkit]} opts
+        term-state (atom {:vt (vt/make-vt width height)})
+        toolkit (if toolkit
+                  toolkit
+                  (load-default-toolkit))
+        font (load-terminal-font toolkit font-family font-size)]
+    (swap! term-state assoc
+           :pty (run-pty-process width height term-state))
+    (doseq [line (string/split-lines (slurp play))]
+      (send-input (:pty @term-state) line)
+      (send-input (:pty @term-state) "\n")
+      (Thread/sleep line-delay))
 
-     (let [^PtyProcess pty (:pty @term-state)]
-       (.close (.getInputStream pty))
-       (.close (.getOutputStream pty))))))
+    (Thread/sleep final-delay)
+    (tk/save-image toolkit
+                   out
+                   (ui/fill-bordered (:background color-scheme) 5
+                                     (term-view color-scheme font (:vt @term-state))))
+    (println (str "Wrote screenshot to " out "."))
+
+    (let [^PtyProcess pty (:pty @term-state)]
+      (.close (.getInputStream pty))
+      (.close (.getOutputStream pty)))))
