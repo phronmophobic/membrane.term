@@ -347,6 +347,8 @@
                                     :toolkit nil
                                     :color-scheme default-color-scheme})
 
+(def default-runterm-opts "Default options used for [[run-term]]" default-common-opts)
+
 (defn run-term
   "Launch an interactive membrane.term terminal. Terminal exits when explicitly closed by user.
 
@@ -381,7 +383,7 @@
   ([]
    (run-term {}))
   ([{:keys [width height color-scheme font-family font-size toolkit] :as opts}]
-   (let [opts (merge default-common-opts opts)
+   (let [opts (merge default-runterm-opts opts)
          {:keys [width height color-scheme font-family font-size toolkit]} opts
          term-state (atom {:vt (vt/make-vt width height)})
          toolkit (if toolkit
@@ -404,6 +406,9 @@
        (.close (.getInputStream pty))
        (.close (.getOutputStream pty))))))
 
+(def default-screenshot-opts "Default options used for [[screenshot]]" (merge default-common-opts {:line-delay 1e3
+                                                                                                   :final-delay 10e3
+                                                                                                   :out "terminal.png"}))
 
 (defn screenshot
   "Take a screenshot after playing a script line by line in a membrane.term terminal.
@@ -443,11 +448,7 @@
       - `IToolkitSaveImage`
     - Usable examples from membrane library: `membrane.java2d/toolkit`, `membrane.skia/toolkit`"
   [{:keys [play out line-delay final-delay width height color-scheme font-family font-size toolkit] :as opts}]
-  (let [opts (merge default-common-opts
-                    {:line-delay 1e3
-                     :final-delay 10e3
-                     :out "terminal.png"}
-                    opts)
+  (let [opts (merge default-screenshot-opts opts)
         {:keys [play width height out line-delay final-delay color-scheme font-family font-size toolkit]} opts
         term-state (atom {:vt (vt/make-vt width height)})
         toolkit (if toolkit
