@@ -370,7 +370,7 @@
      - `:foreground` - Default text color"
   ([]
    (run-term {}))
-  ([opts]
+  ([{:keys [width height color-scheme font-family font-size toolkit] :as opts}]
    (let [opts (merge default-common-opts opts)
          {:keys [width height color-scheme font-family font-size toolkit]} opts
          term-state (atom {:vt (vt/make-vt width height)})
@@ -378,21 +378,21 @@
                    toolkit
                    (load-default-toolkit))
          font (load-terminal-font toolkit font-family font-size)]
-        (swap! term-state assoc
-               :pty (run-pty-process width height term-state))
-        (tk/run-sync
-         toolkit
-         (fn []
-           (let [{:keys [pty vt]} @term-state]
-             (term-events pty
-                          (term-view color-scheme font vt))))
-         {:window-title "membrane.term"
-          :window-start-width (* width (:membrane.term/cell-width font))
-          :window-start-height (+ window-padding-height (* height (:membrane.term/cell-height font)))})
+     (swap! term-state assoc
+            :pty (run-pty-process width height term-state))
+     (tk/run-sync
+      toolkit
+      (fn []
+        (let [{:keys [pty vt]} @term-state]
+          (term-events pty
+                       (term-view color-scheme font vt))))
+      {:window-title "membrane.term"
+       :window-start-width (* width (:membrane.term/cell-width font))
+       :window-start-height (+ window-padding-height (* height (:membrane.term/cell-height font)))})
 
-        (let [^PtyProcess pty (:pty @term-state)]
-          (.close (.getInputStream pty))
-          (.close (.getOutputStream pty))))))
+     (let [^PtyProcess pty (:pty @term-state)]
+       (.close (.getInputStream pty))
+       (.close (.getOutputStream pty))))))
 
 
 (defn screenshot
@@ -404,7 +404,7 @@
   - `:out`         Filename for screenshot image (default: `\"terminal.png\"`)
   - `:line-delay`  Delay in milliseconds to wait after each line in `:play` script is sent to terminal (default: `1000`)
   - `:final-delay` Delay in milliseconds to wait after all lines in `:play` script are sent to terminal (default: `10000`)"
-  [opts]
+  [{:keys [play out line-delay final-delay width height color-scheme font-family font-size toolkit] :as opts}]
   (let [opts (merge default-common-opts
                     {:line-delay 1e3
                      :final-delay 10e3
