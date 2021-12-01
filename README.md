@@ -12,6 +12,11 @@ Some reasons to use **membrane.term**:
 - If you'd like to embed a terminal somewhere. There's not really a guide for embedding, but if you file an issue, I can provide some tips
 - If you'd like to capture terminal screenshots for documentation
 
+## Status
+
+Pre 1.0 release.
+APIs and behavior are subject to change.
+
 ## Installation
 
 Membrane.term works on macOS and Linux operating systems.
