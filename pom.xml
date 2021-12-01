@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.phronemophobic</groupId>
   <artifactId>membrane.term</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.9.0</version>
   <name>com.phronemophobic/membrane.term</name>
   <description>FIXME: my new library.</description>
   <url>https://github.com/com.phronemophobic/membrane.term</url>
@@ -30,6 +30,47 @@
       <artifactId>clojure</artifactId>
       <version>1.10.3</version>
     </dependency>
+    <dependency>
+      <groupId>com.phronemophobic</groupId>
+      <artifactId>vt</artifactId>
+      <version>1.0</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.clojure</groupId>
+          <artifactId>clojurescript</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.clojure</groupId>
+      <artifactId>data.zip</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.phronemophobic</groupId>
+      <artifactId>membrane</artifactId>
+      <version>0.9.31.6-beta</version>
+    </dependency>
+    <dependency>
+      <groupId>dev.nubank</groupId>
+      <artifactId>docopt</artifactId>
+      <version>0.6.1-fix7</version>
+    </dependency>
+    <dependency>
+      <groupId>org.clojure</groupId>
+      <artifactId>data.xml</artifactId>
+      <version>0.2.0-alpha6</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-nop</artifactId>
+      <version>2.0.0-alpha2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.pty4j</groupId>
+      <artifactId>pty4j</artifactId>
+      <version>0.11.4</version>
+    </dependency>
   </dependencies>
   <build>
     <sourceDirectory>src</sourceDirectory>
@@ -42,6 +83,10 @@
     <repository>
       <id>sonatype</id>
       <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+    </repository>
+    <repository>
+      <id>jetbrains-intellij-dependencies</id>
+      <url>https://packages.jetbrains.team/maven/p/ij/intellij-dependencies</url>
     </repository>
   </repositories>
   <distributionManagement>
