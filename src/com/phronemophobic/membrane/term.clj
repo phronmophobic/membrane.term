@@ -7,18 +7,18 @@
   (:import [com.pty4j PtyProcess WinSize]))
 
 
-(defn start-pty []
+(defn- start-pty []
   (let [cmd (into-array String ["/bin/bash" "-l"])
         pty (PtyProcess/exec ^"[Ljava.lang.String;" cmd
                              ^java.util.Map (merge (into {} (System/getenv))
                                                    {"TERM" "xterm-256color"}))]
     pty))
 
-(def blank-cell [32 {}])
-(defn blank-cell? [cell]
+(def ^:private blank-cell [32 {}])
+(defn- blank-cell? [cell]
   (= cell blank-cell))
 
-(defn vt-color->term-color
+(defn- vt-color->term-color
   [color-scheme vt-color]
   (if (vector? vt-color)
     (let [[r g b] vt-color]
@@ -101,7 +101,7 @@
                                           :italic
                                           :upright)))))
 
-(defn term-line [color-scheme {:keys [:membrane.term/cell-width :membrane.term/cell-height] :as font} line]
+(defn- term-line [color-scheme {:keys [:membrane.term/cell-width :membrane.term/cell-height] :as font} line]
   (into []
         (comp
          (map-indexed vector)
@@ -125,10 +125,10 @@
                  foreground))))))
         line))
 
-(def term-line-memo (memoize term-line))
-(def window-padding-height 8)
+(def ^:private term-line-memo (memoize term-line))
+(def ^:private window-padding-height 8)
 
-(defn term-view [color-scheme {:keys [:membrane.term/cell-width :membrane.term/cell-height] :as font} vt]
+(defn- term-view [color-scheme {:keys [:membrane.term/cell-width :membrane.term/cell-height] :as font} vt]
   (let [screen (:screen vt)
         cursor (let [{:keys [x y visible]} (:cursor screen)]
                  (when visible
@@ -153,14 +153,14 @@
                  (-> vt :screen :lines))
            cursor))))
 
-(defn writec-bytes [out bytes]
+(defn- writec-bytes [out bytes]
   (.write ^java.io.OutputStream out (byte-array bytes)))
 
-(defn send-input [pty s]
+(defn- send-input [pty s]
   (let [out (.getOutputStream ^PtyProcess pty)]
     (writec-bytes out (.getBytes ^String s))))
 
-(def meta-shift-map
+(def ^:private meta-shift-map
   {
    \` \~
    \1 \!
@@ -187,7 +187,7 @@
    \. \>
    \/ \?})
 
-(defn term-events [pty view]
+(defn- term-events [pty view]
   (let [out (.getOutputStream ^PtyProcess pty)]
     (ui/on
      :key-event
@@ -278,7 +278,7 @@
        nil)
      view)))
 
-(defn run-pty-process [width height term-state]
+(defn- run-pty-process [width height term-state]
   (let [^PtyProcess
         pty (doto ^PtyProcess (start-pty)
               (.setWinSize (WinSize. width height)))]
@@ -313,10 +313,10 @@
                                 :cell-height (tk/font-line-height toolkit term-font)
                                 :descent-gap (- descent-offset baseline-offset)})))))
 
-(defn load-default-toolkit []
+(defn- load-default-toolkit []
   @(requiring-resolve 'membrane.java2d/toolkit))
 
-(def default-color-scheme
+(def ^:private default-color-scheme
   "Colors are specified a per membrane convention:
    vectors of [red green blue] or [red green blue alpha] with values from 0 - 1 inclusive"
   {:white           [1     1     1]
@@ -340,12 +340,12 @@
    :background      [1     1     1]
    :foreground      [0     0     0]})
 
-(def default-common-opts {:width 90
-                          :height 30
-                          :font-family :monospace
-                          :font-size 12
-                          :toolkit nil
-                          :color-scheme default-color-scheme})
+(def ^:private default-common-opts {:width 90
+                                    :height 30
+                                    :font-family :monospace
+                                    :font-size 12
+                                    :toolkit nil
+                                    :color-scheme default-color-scheme})
 
 (defn run-term
   "Launch an interactive membrane.term terminal. Terminal exits when explicitly closed by user.

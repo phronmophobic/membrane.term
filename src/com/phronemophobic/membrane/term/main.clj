@@ -1,4 +1,4 @@
-(ns com.phronemophobic.membrane.term.main
+(ns ^:no-doc com.phronemophobic.membrane.term.main
   (:require [clojure.java.io :as io]
             [clojure.string :as string]
             [com.phronemophobic.membrane.term :as term]
@@ -36,9 +36,6 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
 |
 | clojure -M:membrane.term run-term -w 133 -h 60
 |")
-
-(defn- parse-string [v]
-  (str v))
 
 (defn parse-font-family [v]
   (if (= "monospace" v)
