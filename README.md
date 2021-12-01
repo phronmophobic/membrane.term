@@ -1,5 +1,9 @@
 # membrane.term
 
+[![cljdoc](https://cljdoc.org/badge/com.phronemophobic/membrane.term)](https://cljdoc.org/d/com.phronemophobic/membrane.term)
+[![clojurians slack](https://img.shields.io/badge/slack-join_chat-brightgreen.svg)](https://clojurians.slack.com/archives/C02KE09HMHV)
+[![clojars](https://img.shields.io/clojars/v/com.phronemophobic/membrane.term.svg)](https://clojars.org/com.phronemophobic/membrane.term)
+
 A simple terminal emulator in clojure.
 
 ## Rationale
