@@ -351,12 +351,8 @@
   "Launch an interactive membrane.term terminal. Terminal exits when explicitly closed by user.
 
   Accepts optional `opts` map:
-  - `:width`         Window width in characters (default: `90`)
-  - `:height`        Window height in characters (default: `30`)
-  - `:font-family`   OS installed font family name. Example: `\"Courier New\"`.
-     Use `:monospace` for default monospace (default: `:monospace`)
-  - `:font-size`     Font point size (default: `12`)
-  - `:toolkit`       Graphics toolkit, specify `\"java2d\"` or `\"skia\"` (default: `\"java2d\"`)
+  - `:width`           Window width in characters (default: `90`)
+  - `:height`          Window height in characters (default: `30`)
   - `:color-scheme`  Map for terminal colors (defaults to an internal scheme)
      Colors are specified per membrane convention, vectors of `[red green blue]` or
      `[red green blue alpha]` with values from `0` - `1` inclusive. Example: `[0.14  0.74  0.14 0.50]`.
@@ -367,7 +363,21 @@
      - `:cursor` - Background color for cursor
      - `:cursor-text` - Foreground color for cursor text
      - `:background` - Default background color
-     - `:foreground` - Default text color"
+     - `:foreground` - Default text color
+  - `:font-family`     OS installed font family name. Example: `\"Courier New\"`.
+     Use `:monospace` for default monospace (default: `:monospace`)
+  - `:font-size`       Font point size (default: `12`)
+  - `:toolkit`         Graphics toolkit (default: `membrane.toolkit/java2d`)
+    - An object that must satisfy the following
+      [`membrane.toolkit`](https://github.com/phronmophobic/membrane/blob/master/src/membrane/toolkit.clj) interfaces:
+      - `IToolkit`
+      - `IToolkitLogicalFontFontFamily`
+      - `IToolkitFontExists`
+      - `IToolkitFontMetrics`
+      - `IToolkitFontAdvanceX`
+      - `IToolkitFontLineHeight`
+      - `IToolkitRunSync`
+    - Usable examples from membrane library: `membrane.java2d/toolkit`, `membrane.skia/toolkit`"
   ([]
    (run-term {}))
   ([{:keys [width height color-scheme font-family font-size toolkit] :as opts}]
@@ -399,11 +409,39 @@
   "Take a screenshot after playing a script line by line in a membrane.term terminal.
   Terminal is not displayed and automatically exits after screenshot is written.
 
-  Requires `opts` map which accepts all options documented in [[run-term]] and:
-  - `:play`        Path to script to play in terminal (**required**)
-  - `:out`         Filename for screenshot image (default: `\"terminal.png\"`)
-  - `:line-delay`  Delay in milliseconds to wait after each line in `:play` script is sent to terminal (default: `1000`)
-  - `:final-delay` Delay in milliseconds to wait after all lines in `:play` script are sent to terminal (default: `10000`)"
+  Requires `opts` map:
+  - `:play`          Path to script to play in terminal (**required**)
+  - `:out`           Filename for screenshot image (default: `\"terminal.png\"`)
+  - `:line-delay`    Delay in milliseconds to wait after each line in `:play` script is sent to terminal (default: `1000`)
+  - `:final-delay`   Delay in milliseconds to wait after all lines in `:play` script are sent to terminal (default: `10000`)
+  - `:width`         Window width in characters (default: `90`)
+  - `:height`        Window height in characters (default: `30`)
+  - `:color-scheme`  Map for terminal colors (defaults to an internal scheme)
+     Colors are specified per membrane convention, vectors of `[red green blue]` or
+     `[red green blue alpha]` with values from `0` - `1` inclusive. Example: `[0.14  0.74  0.14 0.50]`.
+     A color value must be specified for all of:
+     - ANSI colors
+       - `:white` `:black` `:red` `:green` `:yellow` `:blue` `:magenta` `cyan`
+       - `:bright-white` `:bright-black` `:bright-red` `:bright-green` `:bright-yellow` `:bright-blue` `:bright-magenta` `:bright-cyan`
+     - `:cursor` - Background color for cursor
+     - `:cursor-text` - Foreground color for cursor text
+     - `:background` - Default background color
+     - `:foreground` - Default text color
+  - `:font-family`   OS installed font family name. Example: `\"Courier New\"`.
+     Use `:monospace` for default monospace (default: `:monospace`)
+  - `:font-size`     Font point size (default: `12`)
+  - `:toolkit`       Graphics toolkit (default: `membrane.toolkit/java2d`)
+    - An object that must satisfy the following
+      [`membrane.toolkit`](https://github.com/phronmophobic/membrane/blob/master/src/membrane/toolkit.clj) interfaces:
+      - `IToolkit`
+      - `IToolkitLogicalFontFontFamily`
+      - `IToolkitFontExists`
+      - `IToolkitFontMetrics`
+      - `IToolkitFontAdvanceX`
+      - `IToolkitFontLineHeight`
+      - `IToolkitRunSync`
+      - `IToolkitSaveImage`
+    - Usable examples from membrane library: `membrane.java2d/toolkit`, `membrane.skia/toolkit`"
   [{:keys [play out line-delay final-delay width height color-scheme font-family font-size toolkit] :as opts}]
   (let [opts (merge default-common-opts
                     {:line-delay 1e3
