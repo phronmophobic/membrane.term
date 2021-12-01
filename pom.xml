@@ -31,6 +31,26 @@
       <version>1.10.3</version>
     </dependency>
     <dependency>
+      <groupId>org.clojure</groupId>
+      <artifactId>data.xml</artifactId>
+      <version>0.2.0-alpha6</version>
+    </dependency>
+    <dependency>
+      <groupId>org.clojure</groupId>
+      <artifactId>data.zip</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>dev.nubank</groupId>
+      <artifactId>docopt</artifactId>
+      <version>0.6.1-fix7</version>
+    </dependency>
+    <dependency>
+      <groupId>com.phronemophobic</groupId>
+      <artifactId>membrane</artifactId>
+      <version>0.9.31.6-beta</version>
+    </dependency>
+    <dependency>
       <groupId>com.phronemophobic</groupId>
       <artifactId>vt</artifactId>
       <version>1.0</version>
@@ -40,31 +60,6 @@
           <artifactId>clojurescript</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.clojure</groupId>
-      <artifactId>data.zip</artifactId>
-      <version>1.0.0</version>
-    </dependency>
-    <dependency>
-      <groupId>com.phronemophobic</groupId>
-      <artifactId>membrane</artifactId>
-      <version>0.9.31.6-beta</version>
-    </dependency>
-    <dependency>
-      <groupId>dev.nubank</groupId>
-      <artifactId>docopt</artifactId>
-      <version>0.6.1-fix7</version>
-    </dependency>
-    <dependency>
-      <groupId>org.clojure</groupId>
-      <artifactId>data.xml</artifactId>
-      <version>0.2.0-alpha6</version>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-nop</artifactId>
-      <version>2.0.0-alpha2</version>
     </dependency>
     <dependency>
       <groupId>org.jetbrains.pty4j</groupId>
@@ -79,10 +74,6 @@
     <repository>
       <id>clojars</id>
       <url>https://repo.clojars.org/</url>
-    </repository>
-    <repository>
-      <id>sonatype</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
     </repository>
     <repository>
       <id>jetbrains-intellij-dependencies</id>
