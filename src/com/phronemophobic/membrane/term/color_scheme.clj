@@ -1,4 +1,4 @@
-(ns com.phronemophobic.membrane.term.color-scheme
+(ns ^:no-doc com.phronemophobic.membrane.term.color-scheme
   (:require [clojure.data.xml :as xml]
             [clojure.data.zip.xml :as zxml]
             [clojure.set :as cset]

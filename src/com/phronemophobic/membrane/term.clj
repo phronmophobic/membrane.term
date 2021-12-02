@@ -7,18 +7,18 @@
   (:import [com.pty4j PtyProcess WinSize]))
 
 
-(defn start-pty []
+(defn- start-pty []
   (let [cmd (into-array String ["/bin/bash" "-l"])
         pty (PtyProcess/exec ^"[Ljava.lang.String;" cmd
                              ^java.util.Map (merge (into {} (System/getenv))
                                                    {"TERM" "xterm-256color"}))]
     pty))
 
-(def blank-cell [32 {}])
-(defn blank-cell? [cell]
+(def ^:private blank-cell [32 {}])
+(defn- blank-cell? [cell]
   (= cell blank-cell))
 
-(defn vt-color->term-color
+(defn- vt-color->term-color
   [color-scheme vt-color]
   (if (vector? vt-color)
     (let [[r g b] vt-color]
@@ -101,7 +101,7 @@
                                           :italic
                                           :upright)))))
 
-(defn term-line [color-scheme {:keys [:membrane.term/cell-width :membrane.term/cell-height] :as font} line]
+(defn- term-line [color-scheme {:keys [:membrane.term/cell-width :membrane.term/cell-height] :as font} line]
   (into []
         (comp
          (map-indexed vector)
@@ -125,10 +125,10 @@
                  foreground))))))
         line))
 
-(def term-line-memo (memoize term-line))
-(def window-padding-height 8)
+(def ^:private term-line-memo (memoize term-line))
+(def ^:private window-padding-height 8)
 
-(defn term-view [color-scheme {:keys [:membrane.term/cell-width :membrane.term/cell-height] :as font} vt]
+(defn- term-view [color-scheme {:keys [:membrane.term/cell-width :membrane.term/cell-height] :as font} vt]
   (let [screen (:screen vt)
         cursor (let [{:keys [x y visible]} (:cursor screen)]
                  (when visible
@@ -153,14 +153,14 @@
                  (-> vt :screen :lines))
            cursor))))
 
-(defn writec-bytes [out bytes]
+(defn- writec-bytes [out bytes]
   (.write ^java.io.OutputStream out (byte-array bytes)))
 
-(defn send-input [pty s]
+(defn- send-input [pty s]
   (let [out (.getOutputStream ^PtyProcess pty)]
     (writec-bytes out (.getBytes ^String s))))
 
-(def meta-shift-map
+(def ^:private meta-shift-map
   {
    \` \~
    \1 \!
@@ -187,7 +187,7 @@
    \. \>
    \/ \?})
 
-(defn term-events [pty view]
+(defn- term-events [pty view]
   (let [out (.getOutputStream ^PtyProcess pty)]
     (ui/on
      :key-event
@@ -278,7 +278,7 @@
        nil)
      view)))
 
-(defn run-pty-process [width height term-state]
+(defn- run-pty-process [width height term-state]
   (let [^PtyProcess
         pty (doto ^PtyProcess (start-pty)
               (.setWinSize (WinSize. width height)))]
@@ -313,12 +313,11 @@
                                 :cell-height (tk/font-line-height toolkit term-font)
                                 :descent-gap (- descent-offset baseline-offset)})))))
 
-(defn load-default-toolkit []
+(defn- load-default-toolkit []
   @(requiring-resolve 'membrane.java2d/toolkit))
 
 (def default-color-scheme
-  "Colors are specified a per membrane convention:
-   vectors of [red green blue] or [red green blue alpha] with values from 0 - 1 inclusive"
+  "Default color-scheme used in [[default-run-term-opts]] and [[default-screenshot-opts]]"
   {:white           [1     1     1]
    :black           [0     0     0]
    :red             [0.76  0.21  0.13]
@@ -340,48 +339,51 @@
    :background      [1     1     1]
    :foreground      [0     0     0]})
 
-(def default-common-opts {:width 90
-                          :height 30
-                          :font-family :monospace
-                          :font-size 12
-                          :toolkit nil
-                          :color-scheme default-color-scheme})
+(def ^:private default-common-opts {:width 90
+                                    :height 30
+                                    :font-family :monospace
+                                    :font-size 12
+                                    :toolkit nil
+                                    :color-scheme default-color-scheme})
+
+(def default-run-term-opts "Default options used for [[run-term]]" default-common-opts)
 
 (defn run-term
+  "Launch an interactive membrane.term terminal. Terminal exits when explicitly closed by user.
+
+  Accepts optional `opts` map:
+  - `:width`           Window width in characters (default: `90`)
+  - `:height`          Window height in characters (default: `30`)
+  - `:color-scheme`  Map for terminal colors (defaults to an internal scheme)
+     Colors are specified per membrane convention, vectors of `[red green blue]` or
+     `[red green blue alpha]` with values from `0` - `1` inclusive. Example: `[0.14  0.74  0.14 0.50]`.
+     A color value must be specified for all of:
+     - ANSI colors
+       - `:white` `:black` `:red` `:green` `:yellow` `:blue` `:magenta` `cyan`
+       - `:bright-white` `:bright-black` `:bright-red` `:bright-green` `:bright-yellow` `:bright-blue` `:bright-magenta` `:bright-cyan`
+     - `:cursor` - Background color for cursor
+     - `:cursor-text` - Foreground color for cursor text
+     - `:background` - Default background color
+     - `:foreground` - Default text color
+  - `:font-family`     OS installed font family name. Example: `\"Courier New\"`.
+     Use `:monospace` for default monospace (default: `:monospace`)
+  - `:font-size`       Font point size (default: `12`)
+  - `:toolkit`         Graphics toolkit (default: `membrane.toolkit/java2d`)
+    - An object that must satisfy the following
+      [`membrane.toolkit`](https://github.com/phronmophobic/membrane/blob/master/src/membrane/toolkit.clj) interfaces:
+      - `IToolkit`
+      - `IToolkitLogicalFontFontFamily`
+      - `IToolkitFontExists`
+      - `IToolkitFontMetrics`
+      - `IToolkitFontAdvanceX`
+      - `IToolkitFontLineHeight`
+      - `IToolkitRunSync`
+    - Usable examples from membrane library: `membrane.java2d/toolkit`, `membrane.skia/toolkit`"
   ([]
    (run-term {}))
-  ([opts]
-   (let [opts (merge default-common-opts opts)
+  ([{:keys [width height color-scheme font-family font-size toolkit] :as opts}]
+   (let [opts (merge default-run-term-opts opts)
          {:keys [width height color-scheme font-family font-size toolkit]} opts
-         term-state (atom {:vt (vt/make-vt width height)})
-         toolkit (if toolkit
-                   toolkit
-                   (load-default-toolkit))
-         font (load-terminal-font toolkit font-family font-size)]
-        (swap! term-state assoc
-               :pty (run-pty-process width height term-state))
-        (tk/run-sync
-         toolkit
-         (fn []
-           (let [{:keys [pty vt]} @term-state]
-             (term-events pty
-                          (term-view color-scheme font vt))))
-         {:window-title "membrane.term"
-          :window-start-width (* width (:membrane.term/cell-width font))
-          :window-start-height (+ window-padding-height (* height (:membrane.term/cell-height font)))})
-
-        (let [^PtyProcess pty (:pty @term-state)]
-          (.close (.getInputStream pty))
-          (.close (.getOutputStream pty))))))
-
-(defn screenshot
-  ([opts]
-   (let [opts (merge default-common-opts
-                     {:line-delay 1e3
-                      :final-delay 10e3
-                      :out "terminal.png"}
-                     opts)
-         {:keys [play width height out line-delay final-delay color-scheme font-family font-size toolkit]} opts
          term-state (atom {:vt (vt/make-vt width height)})
          toolkit (if toolkit
                    toolkit
@@ -389,18 +391,83 @@
          font (load-terminal-font toolkit font-family font-size)]
      (swap! term-state assoc
             :pty (run-pty-process width height term-state))
-     (doseq [line (string/split-lines (slurp play))]
-       (send-input (:pty @term-state) line)
-       (send-input (:pty @term-state) "\n")
-       (Thread/sleep line-delay))
-
-     (Thread/sleep final-delay)
-     (tk/save-image toolkit
-                    out
-                    (ui/fill-bordered (:background color-scheme) 5
-                                      (term-view color-scheme font (:vt @term-state))))
-     (println (str "Wrote screenshot to " out "."))
+     (tk/run-sync
+      toolkit
+      (fn []
+        (let [{:keys [pty vt]} @term-state]
+          (term-events pty
+                       (term-view color-scheme font vt))))
+      {:window-title "membrane.term"
+       :window-start-width (* width (:membrane.term/cell-width font))
+       :window-start-height (+ window-padding-height (* height (:membrane.term/cell-height font)))})
 
      (let [^PtyProcess pty (:pty @term-state)]
        (.close (.getInputStream pty))
        (.close (.getOutputStream pty))))))
+
+(def default-screenshot-opts "Default options used for [[screenshot]]" (merge default-common-opts {:line-delay 1e3
+                                                                                                   :final-delay 10e3
+                                                                                                   :out "terminal.png"}))
+
+(defn screenshot
+  "Take a screenshot after playing a script line by line in a membrane.term terminal.
+  Terminal is not displayed and automatically exits after screenshot is written.
+
+  Requires `opts` map:
+  - `:play`          Path to script to play in terminal (**required**)
+  - `:out`           Filename for screenshot image (default: `\"terminal.png\"`)
+  - `:line-delay`    Delay in milliseconds to wait after each line in `:play` script is sent to terminal (default: `1000`)
+  - `:final-delay`   Delay in milliseconds to wait after all lines in `:play` script are sent to terminal (default: `10000`)
+  - `:width`         Window width in characters (default: `90`)
+  - `:height`        Window height in characters (default: `30`)
+  - `:color-scheme`  Map for terminal colors (defaults to an internal scheme)
+     Colors are specified per membrane convention, vectors of `[red green blue]` or
+     `[red green blue alpha]` with values from `0` - `1` inclusive. Example: `[0.14  0.74  0.14 0.50]`.
+     A color value must be specified for all of:
+     - ANSI colors
+       - `:white` `:black` `:red` `:green` `:yellow` `:blue` `:magenta` `cyan`
+       - `:bright-white` `:bright-black` `:bright-red` `:bright-green` `:bright-yellow` `:bright-blue` `:bright-magenta` `:bright-cyan`
+     - `:cursor` - Background color for cursor
+     - `:cursor-text` - Foreground color for cursor text
+     - `:background` - Default background color
+     - `:foreground` - Default text color
+  - `:font-family`   OS installed font family name. Example: `\"Courier New\"`.
+     Use `:monospace` for default monospace (default: `:monospace`)
+  - `:font-size`     Font point size (default: `12`)
+  - `:toolkit`       Graphics toolkit (default: `membrane.toolkit/java2d`)
+    - An object that must satisfy the following
+      [`membrane.toolkit`](https://github.com/phronmophobic/membrane/blob/master/src/membrane/toolkit.clj) interfaces:
+      - `IToolkit`
+      - `IToolkitLogicalFontFontFamily`
+      - `IToolkitFontExists`
+      - `IToolkitFontMetrics`
+      - `IToolkitFontAdvanceX`
+      - `IToolkitFontLineHeight`
+      - `IToolkitRunSync`
+      - `IToolkitSaveImage`
+    - Usable examples from membrane library: `membrane.java2d/toolkit`, `membrane.skia/toolkit`"
+  [{:keys [play out line-delay final-delay width height color-scheme font-family font-size toolkit] :as opts}]
+  (let [opts (merge default-screenshot-opts opts)
+        {:keys [play width height out line-delay final-delay color-scheme font-family font-size toolkit]} opts
+        term-state (atom {:vt (vt/make-vt width height)})
+        toolkit (if toolkit
+                  toolkit
+                  (load-default-toolkit))
+        font (load-terminal-font toolkit font-family font-size)]
+    (swap! term-state assoc
+           :pty (run-pty-process width height term-state))
+    (doseq [line (string/split-lines (slurp play))]
+      (send-input (:pty @term-state) line)
+      (send-input (:pty @term-state) "\n")
+      (Thread/sleep line-delay))
+
+    (Thread/sleep final-delay)
+    (tk/save-image toolkit
+                   out
+                   (ui/fill-bordered (:background color-scheme) 5
+                                     (term-view color-scheme font (:vt @term-state))))
+    (println (str "Wrote screenshot to " out "."))
+
+    (let [^PtyProcess pty (:pty @term-state)]
+      (.close (.getInputStream pty))
+      (.close (.getOutputStream pty)))))

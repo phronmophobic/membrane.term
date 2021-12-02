@@ -3,22 +3,7 @@ All notable changes to this project will be documented in this file. This change
 
 ## [Unreleased]
 ### Changed
-- Add a new arity to `make-widget-async` to provide a different widget shape.
+- Document public API [#28](https://github.com/phronmophobic/membrane.term/issues/28)
 
-## [0.1.1] - 2021-10-21
-### Changed
-- Documentation on how to make the widgets.
-
-### Removed
-- `make-widget-sync` - we're all async, all the time.
-
-### Fixed
-- Fixed widget maker to keep working when daylight savings switches over.
-
-## 0.1.0 - 2021-10-21
-### Added
-- Files from the new template.
-- Widget maker public API - `make-widget-sync`.
-
-[Unreleased]: https://github.com/com.phronemophobic.membrane/term/compare/0.1.1...HEAD
-[0.1.1]: https://github.com/com.phronemophobic.membrane/term/compare/0.1.0...0.1.1
+## [0.9.0] - 2021-11-30
+- Initial release to clojars
