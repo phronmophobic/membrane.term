@@ -19,10 +19,10 @@
     </developer>
   </developers>
   <scm>
-    <url>https://github.com/com.phronemophobic/membrane.term</url>
-    <connection>scm:git:git://github.com/com.phronemophobic/membrane.term.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/com.phronemophobic/membrane.term.git</developerConnection>
-    <tag>v0.1.0-SNAPSHOT</tag>
+    <url>https://github.com/phronmophobic/membrane.term</url>
+    <connection>scm:git:git@github.com:phronmophobic/membrane.term.git</connection>
+    <developerConnection>scm:git:git@github.com:phronmophobic/membrane.term.git</developerConnection>
+    <!-- <tag>v0.1.0-SNAPSHOT</tag> -->
   </scm>
   <dependencies>
     <dependency>
