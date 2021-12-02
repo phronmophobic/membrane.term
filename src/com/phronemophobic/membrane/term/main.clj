@@ -61,6 +61,13 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
         (catch Throwable e
           {:error (format "unable to open path, %s" (ex-message e))})))))
 
+(defn- parse-play-script [v]
+  (when v
+    (let [p (parse-existing-path v)]
+      (if (:error p)
+        p
+        (slurp p)))))
+
 (defn- parse-color-scheme [v]
   (when v
     (let [p (parse-existing-path v)]
@@ -146,7 +153,7 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
                  (fn result-fn [arg-map]
                    (let [arg-map (validate-args arg-map {"--width" (int-parser-validator 1)
                                                          "--height" (int-parser-validator 1)
-                                                         "--play" parse-existing-path
+                                                         "--play" parse-play-script
                                                          "--color-scheme" parse-color-scheme
                                                          "--out" parse-image-out
                                                          "--line-delay" (int-parser-validator 0)

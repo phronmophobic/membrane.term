@@ -414,7 +414,7 @@
   Terminal is not displayed and automatically exits after screenshot is written.
 
   Requires `opts` map:
-  - `:play`          Path to script to play in terminal (**required**)
+  - `:play`          Script string to play in terminal (**required**)
   - `:out`           Filename for screenshot image (default: `\"terminal.png\"`)
   - `:line-delay`    Delay in milliseconds to wait after each line in `:play` script is sent to terminal (default: `1000`)
   - `:final-delay`   Delay in milliseconds to wait after all lines in `:play` script are sent to terminal (default: `10000`)
@@ -456,7 +456,7 @@
         font (load-terminal-font toolkit font-family font-size)]
     (swap! term-state assoc
            :pty (run-pty-process width height term-state))
-    (doseq [line (string/split-lines (slurp play))]
+    (doseq [line (string/split-lines play)]
       (send-input (:pty @term-state) line)
       (send-input (:pty @term-state) "\n")
       (Thread/sleep line-delay))
@@ -471,3 +471,8 @@
     (let [^PtyProcess pty (:pty @term-state)]
       (.close (.getInputStream pty))
       (.close (.getOutputStream pty)))))
+
+(comment
+  (screenshot {:play "ls -l" :out "x.png"})
+  (screenshot {:play "ls -l\n" :out "y.png"})
+  (screenshot {:play "export PS1='$ '\nclear\nmsgcat --color=test | head -11" :out "z.png"}))
