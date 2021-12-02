@@ -316,9 +316,8 @@
 (defn- load-default-toolkit []
   @(requiring-resolve 'membrane.java2d/toolkit))
 
-(def ^:private default-color-scheme
-  "Colors are specified a per membrane convention:
-   vectors of [red green blue] or [red green blue alpha] with values from 0 - 1 inclusive"
+(def default-color-scheme
+  "Default color-scheme used in [[default-run-term-opts]] and [[default-screenshot-opts]]"
   {:white           [1     1     1]
    :black           [0     0     0]
    :red             [0.76  0.21  0.13]
