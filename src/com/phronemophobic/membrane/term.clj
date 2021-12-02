@@ -347,7 +347,7 @@
                                     :toolkit nil
                                     :color-scheme default-color-scheme})
 
-(def default-runterm-opts "Default options used for [[run-term]]" default-common-opts)
+(def default-run-term-opts "Default options used for [[run-term]]" default-common-opts)
 
 (defn run-term
   "Launch an interactive membrane.term terminal. Terminal exits when explicitly closed by user.
@@ -383,7 +383,7 @@
   ([]
    (run-term {}))
   ([{:keys [width height color-scheme font-family font-size toolkit] :as opts}]
-   (let [opts (merge default-runterm-opts opts)
+   (let [opts (merge default-run-term-opts opts)
          {:keys [width height color-scheme font-family font-size toolkit]} opts
          term-state (atom {:vt (vt/make-vt width height)})
          toolkit (if toolkit
