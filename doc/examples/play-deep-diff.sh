@@ -1,3 +1,4 @@
+/bin/bash -l
 export PS1="$ "
 cd
 mkdir -p target/term-screenshot

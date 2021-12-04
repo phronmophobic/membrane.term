@@ -1,0 +1,4 @@
+iRoses are red
+Violets are blue
+Clojure is fun
+And so are you
