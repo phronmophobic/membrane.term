@@ -1,3 +1,4 @@
+/bin/bash -l
 # override prompt to something doc-friendly
 export PS1="$ "
 # print out some  colors

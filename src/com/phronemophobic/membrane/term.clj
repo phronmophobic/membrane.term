@@ -7,8 +7,13 @@
   (:import [com.pty4j PtyProcess WinSize]))
 
 
-(defn- start-pty []
-  (let [cmd (into-array String ["/bin/bash" "-l"])
+(def ^:private windows?
+  (-> (System/getProperty "os.name")
+      (string/lower-case)
+      (string/includes? "win")))
+
+(defn- start-pty [cmd]
+  (let [cmd (into-array String cmd)
         pty (PtyProcess/exec ^"[Ljava.lang.String;" cmd
                              ^java.util.Map (merge (into {} (System/getenv))
                                                    {"TERM" "xterm-256color"}))]
@@ -278,9 +283,9 @@
        nil)
      view)))
 
-(defn- run-pty-process [width height term-state]
+(defn- run-pty-process [cmd width height term-state]
   (let [^PtyProcess
-        pty (doto ^PtyProcess (start-pty)
+        pty (doto ^PtyProcess (start-pty cmd)
               (.setWinSize (WinSize. width height)))]
     (future
       (try
@@ -315,6 +320,12 @@
 
 (defn- load-default-toolkit []
   @(requiring-resolve 'membrane.java2d/toolkit))
+
+(defn- default-cmd []
+  [(if windows?
+     "powershell"
+     (or (System/getenv "SHELL")
+         "/bin/bash"))])
 
 (def default-color-scheme
   "Default color-scheme used in [[default-run-term-opts]] and [[default-screenshot-opts]]"
@@ -352,8 +363,15 @@
   "Launch an interactive membrane.term terminal. Terminal exits when explicitly closed by user.
 
   Accepts optional `opts` map:
-  - `:width`           Window width in characters (default: `90`)
-  - `:height`          Window height in characters (default: `30`)
+  - `:command`       The command to run, typically, but not necessarily, a shell.
+    - Examples:
+      - `[\"/bin/bash\" \"--login\"]`
+      - `[\"top\"]`
+    - Defaults:
+      - macOS and linux: value of SHELL environment value, else `[\"/bin/bash\"]`
+      - Windows: `[\"powershell\"]`
+  - `:width`         Window width in characters (default: `90`)
+  - `:height`        Window height in characters (default: `30`)
   - `:color-scheme`  Map for terminal colors (defaults to an internal scheme)
      Colors are specified per membrane convention, vectors of `[red green blue]` or
      `[red green blue alpha]` with values from `0` - `1` inclusive. Example: `[0.14  0.74  0.14 0.50]`.
@@ -381,16 +399,17 @@
     - Usable examples from membrane library: `membrane.java2d/toolkit`, `membrane.skia/toolkit`"
   ([]
    (run-term {}))
-  ([{:keys [width height color-scheme font-family font-size toolkit] :as opts}]
+  ([{:keys [command width height color-scheme font-family font-size toolkit] :as opts}]
    (let [opts (merge default-run-term-opts opts)
-         {:keys [width height color-scheme font-family font-size toolkit]} opts
+         {:keys [command width height color-scheme font-family font-size toolkit]} opts
+         command (or command (default-cmd))
          term-state (atom {:vt (vt/make-vt width height)})
          toolkit (if toolkit
                    toolkit
                    (load-default-toolkit))
          font (load-terminal-font toolkit font-family font-size)]
      (swap! term-state assoc
-            :pty (run-pty-process width height term-state))
+            :pty (run-pty-process command width height term-state))
      (tk/run-sync
       toolkit
       (fn []
@@ -414,7 +433,14 @@
   Terminal is not displayed and automatically exits after screenshot is written.
 
   Requires `opts` map:
-  - `:play`          Script string to play in terminal (**required**)
+  - `:command`       The command to run, typically, but not necessarily, a shell.
+    - Examples:
+      - `[\"/bin/bash\" \"--login\"]`
+      - `[\"top\"]`
+    - Defaults:
+      - macOS and linux: value of SHELL environment value, else `[\"/bin/bash\"]`
+      - Windows: `[\"powershell\"]`
+  - `:play`          Optional script string to play in terminal
   - `:out`           Filename for screenshot image (default: `\"terminal.png\"`)
   - `:line-delay`    Delay in milliseconds to wait after each line in `:play` script is sent to terminal (default: `1000`)
   - `:final-delay`   Delay in milliseconds to wait after all lines in `:play` script are sent to terminal (default: `10000`)
@@ -446,16 +472,18 @@
       - `IToolkitRunSync`
       - `IToolkitSaveImage`
     - Usable examples from membrane library: `membrane.java2d/toolkit`, `membrane.skia/toolkit`"
-  [{:keys [play out line-delay final-delay width height color-scheme font-family font-size toolkit] :as opts}]
+  [{:keys [command play out line-delay final-delay width height color-scheme font-family font-size toolkit] :as opts}]
   (let [opts (merge default-screenshot-opts opts)
-        {:keys [play width height out line-delay final-delay color-scheme font-family font-size toolkit]} opts
+        {:keys [command play width height out line-delay final-delay color-scheme font-family font-size toolkit]} opts
+        command (or command (default-cmd))
+        play (or play "")
         term-state (atom {:vt (vt/make-vt width height)})
         toolkit (if toolkit
                   toolkit
                   (load-default-toolkit))
         font (load-terminal-font toolkit font-family font-size)]
     (swap! term-state assoc
-           :pty (run-pty-process width height term-state))
+           :pty (run-pty-process command width height term-state))
     (doseq [line (string/split-lines play)]
       (send-input (:pty @term-state) line)
       (send-input (:pty @term-state) "\n")
@@ -473,6 +501,10 @@
       (.close (.getOutputStream pty)))))
 
 (comment
+  (run-term {:cmd ["ls" "-l"]})
+  (run-term {:cmd ["top"]})
+  (run-term {:font-family "MesloLGS NF" :font-size 14 :width 200} )
+
   (screenshot {:play "ls -l" :out "x.png"})
   (screenshot {:play "ls -l\n" :out "y.png"})
   (screenshot {:play "export PS1='$ '\nclear\nmsgcat --color=test | head -11" :out "z.png"}))
