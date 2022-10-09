@@ -4,7 +4,7 @@
 [![clojurians slack](https://img.shields.io/badge/slack-join_chat-brightgreen.svg)](https://clojurians.slack.com/archives/C02KE09HMHV)
 [![clojars](https://img.shields.io/clojars/v/com.phronemophobic/membrane.term.svg)](https://clojars.org/com.phronemophobic/membrane.term)
 
-A simple terminal emulator in clojure.
+A simple terminal emulator in clojure. Built with [membrane](https://github.com/phronmophobic/membrane).
 
 ## Rationale
 
