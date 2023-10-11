@@ -238,6 +238,10 @@
                    (38 265)
                    (mapv int [0x1b \[ \A])
 
+                   ;; space
+                   32
+                   [32]
+
                    ;; default
                    nil))]
            (cond
@@ -275,10 +279,10 @@
                         ;; default
                         nil)
                       s)]
-         (let [bts (.getBytes ^String s)]
-           (when (pos? (first bts))
-             (writec-bytes out bts)
-             )))
+         (when (not= " " s)
+           (let [bts (.getBytes ^String s)]
+             (when (pos? (first bts))
+               (writec-bytes out bts)))))
 
        nil)
      view)))
