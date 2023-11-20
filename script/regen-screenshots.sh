@@ -1,4 +1,4 @@
-#/usr/bin/env bash
+#!/usr/bin/env bash
 
 set -eou pipefail
 
@@ -31,3 +31,15 @@ clj -M:membrane.term screenshot \
     --font-family "NovaMono" \
     --font-size 16 \
     --out doc/images/screenshot-msgcat-font.png
+
+echo "- launch msgcat as command -"
+clj -M:membrane.term screenshot \
+    --command 'msgcat --color=test' \
+    --width 80 --height 22 \
+    --out doc/images/screenshot-msgcat-command.png
+
+echo "- launch with vi and play some text -"
+clj -M:membrane.term screenshot \
+    --command vi --play doc/examples/an-ode-to-clojure.txt \
+    --width 40 --height 10 \
+    --out doc/images/screenshot-vi-command.png
