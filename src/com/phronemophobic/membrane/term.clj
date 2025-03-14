@@ -245,6 +245,10 @@
                    32
                    [32]
 
+                   ;; enter
+                   (257 335)
+                   [(int \return)]
+
                    ;; default
                    nil))]
            (cond
@@ -276,11 +280,7 @@
      :key-press
      (fn [s]
        (when-let [s (if (keyword? s)
-                      (case s
-                        :enter "\r"
-
-                        ;; default
-                        nil)
+                      nil
                       s)]
          (when (not= " " s)
            (let [bts (.getBytes ^String s)]
