@@ -136,9 +136,12 @@
                     (* cell-width x) (* cell-height y)
                     [(ui/with-color (:cursor color-scheme)
                        (ui/rectangle (inc cell-width) (inc cell-height)))
-                     (ui/with-color  (:cursor-text color-scheme)
-                       (let [[c attrs] (-> vt :screen :lines (nth y) (nth x))]
-                         (character font c attrs)))])))]
+                     ;; cursor can be out of bounds during resize
+                     (when (and (< x (:width screen))
+                                (< y (:height screen)))
+                       (ui/with-color  (:cursor-text color-scheme)
+                         (let [[c attrs] (-> vt :screen :lines (nth y) (nth x))]
+                           (character font c attrs))))])))]
     (ui/no-events
      (conj [(ui/with-color (:background color-scheme)
               (ui/rectangle (* cell-width (:width screen))
