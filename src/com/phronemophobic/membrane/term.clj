@@ -471,9 +471,9 @@
     (doseq [line (string/split-lines play)]
       (send-input (:pty @term-state) line)
       (send-input (:pty @term-state) "\n")
-      (Thread/sleep line-delay))
+      (Thread/sleep (long line-delay)))
 
-    (Thread/sleep final-delay)
+    (Thread/sleep (long final-delay))
     (tk/save-image toolkit
                    out
                    (ui/fill-bordered (:background color-scheme) 5
