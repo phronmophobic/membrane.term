@@ -5,20 +5,26 @@
             [membrane.ui :as ui]
             [membrane.toolkit :as tk]
             [com.phronemophobic.membrane.term.color-scheme :as color-scheme]
-            [docopt.core :as docopt]))
+            [docopt.core :as docopt]
+            [babashka.process :as process]))
 
 (def docopt-usage
   "membrane.term
 
 Usage:
-  membrane.term run-term [--width=<cols>] [--height=<rows>] \\
+  membrane.term run-term [--command=<cmdline>] \\
+   [--width=<cols>] [--height=<rows>] \\
    [--color-scheme=<path>] [--font-family=<font>] [--font-size=<points>] [--toolkit=<toolkit>]
-  membrane.term screenshot --play=<path> [--width=<cols>] [--height=<rows>] \\
+  membrane.term screenshot [--command=<cmdline>] [--play=<path>] \\
+   [--width=<cols>] [--height=<rows>] \\
    [--color-scheme=<path>] [--font-family=<font>] [--font-size=<points>]\\
    [--out=<file>] [--line-delay=<ms>] [--final-delay=<ms>]  [--toolkit=<toolkit>]
   membrane.term --help
 
 Common Options:
+  -c, --command=<cmdline>    Command to launch with, typically but not necessary a shell.
+                             Default: on macOS and Linux defaults to $SHELL else /bin/bash
+                                      on Windows powershell
   -w, --width=<cols>         Width in characters [default: 90]
   -h, --height=<rows>        Height in characters [default: 30]
       --color-scheme=<path>  Local path or url to iTerm .itermcolors scheme file, uses internal scheme by default.
@@ -110,6 +116,10 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
     (catch Throwable e
       {:error (ex-message e)})))
 
+(defn parse-command [v]
+  (when v
+    (process/tokenize (str v))))
+
 (defn- validate-font [args]
   (let [font-family (get args "--font-family")
         font-size (get args "--font-size")
@@ -151,7 +161,8 @@ Replace membrane.term with your appropriate Clojure tools CLI launch sequence. F
 (defn -main [& args]
   (docopt/docopt (undo-line-continuations docopt-usage) args
                  (fn result-fn [arg-map]
-                   (let [arg-map (validate-args arg-map {"--width" (int-parser-validator 1)
+                   (let [arg-map (validate-args arg-map {"--command" parse-command
+                                                         "--width" (int-parser-validator 1)
                                                          "--height" (int-parser-validator 1)
                                                          "--play" parse-play-script
                                                          "--color-scheme" parse-color-scheme

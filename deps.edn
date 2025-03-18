@@ -1,5 +1,6 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.10.3"}
+        babashka/process {:mvn/version "0.0.2"}
         org.clojure/data.xml {:mvn/version "0.2.0-alpha6"}
         org.clojure/data.zip {:mvn/version "1.0.0"}
         dev.nubank/docopt {:mvn/version "0.6.1-fix7"}
