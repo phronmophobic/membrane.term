@@ -4,14 +4,16 @@
             [clojure.string :as string]
             [membrane.ui :as ui]
             [membrane.toolkit :as tk])
-  (:import [com.pty4j PtyProcess WinSize]))
+  (:import [com.pty4j PtyProcess WinSize PtyProcessBuilder]))
 
 
 (defn- start-pty []
   (let [cmd (into-array String ["/bin/bash" "-l"])
-        pty (PtyProcess/exec ^"[Ljava.lang.String;" cmd
-                             ^java.util.Map (merge (into {} (System/getenv))
-                                                   {"TERM" "xterm-256color"}))]
+        pty (-> (doto (PtyProcessBuilder.)
+                  (.setCommand cmd)
+                  (.setEnvironment (merge (into {} (System/getenv))
+                                          {"TERM" "xterm-256color"})))
+                .start)]
     pty))
 
 (def ^:private blank-cell [32 {}])
